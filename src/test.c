@@ -9,7 +9,7 @@
 #include "conf.h"
 #include "debug.h"
 #include "timer.h"
-#include "sig.h"
+#include "process.h"
 
 void timeout_handler(int sig) {
   printf("timeout %d\n", sig);

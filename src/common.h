@@ -8,7 +8,6 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <assert.h>
 #include <sys/types.h>
 #include <errno.h>

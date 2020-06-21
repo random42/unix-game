@@ -7,7 +7,7 @@ TEST = build/test.o \
 	build/msg.o \
 	build/sem.o \
 	build/shm.o \
-	build/sig.o \
+	build/process.o \
 	build/timer.o \
 	build/game.o \
 	build/debug.o
@@ -17,7 +17,7 @@ MASTER = build/master.o \
 	build/msg.o \
 	build/sem.o \
 	build/shm.o \
-	build/sig.o \
+	build/process.o \
 	build/timer.o \
 	build/game.o \
 	build/debug.o
@@ -27,7 +27,7 @@ PLAYER = build/player.o \
 	build/msg.o \
 	build/sem.o \
 	build/shm.o \
-	build/sig.o \
+	build/process.o \
 	build/game.o \
 	build/debug.o
 
@@ -36,7 +36,7 @@ PAWN = build/pawn.o \
 	build/msg.o \
 	build/sem.o \
 	build/shm.o \
-	build/sig.o \
+	build/process.o \
 	build/game.o \
 	build/debug.o
 

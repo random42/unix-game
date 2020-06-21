@@ -3,7 +3,7 @@
 #include <sys/time.h>
 #include "debug.h"
 #include "timer.h"
-#include "sig.h"
+#include "process.h"
 
 void set_timeout(void (*handler)(int), int sec, int ms, int atomic) {
   set_signal_handler(SIGALRM, handler, atomic);

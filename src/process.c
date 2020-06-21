@@ -1,6 +1,19 @@
 #include <signal.h>
+#include <unistd.h>
+#include "common.h"
 #include "debug.h"
-#include "sig.h"
+#include "process.h"
+
+int get_process_group_id() {
+  return getpgid(0);
+}
+
+void set_process_group_id(int pid, int pgid) {
+  int r = setpgid(pid, pgid);
+  if (r == -1) {
+    error("setpgid\n");
+  }
+}
 
 // set function to handle signals
 // if atomic is TRUE then the handler cannot be interrupted by other signals
