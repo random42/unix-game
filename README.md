@@ -1,9 +1,16 @@
 ## How to run
 
 Compile:
-`make`
 
-Set config file opt.conf
+```bash
+make
+```
 
-Execute:
-`bin/manager`
+Set environment in *.env* file.
+
+```bash
+# set env variables
+export $(egrep -v '^#' .env | xargs)
+# execute
+./bin/master
+```

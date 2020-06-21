@@ -4,7 +4,6 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <errno.h>
-
 #include "common.h"
 
 int sem_get(int key) {
@@ -12,6 +11,7 @@ int sem_get(int key) {
   if (id == -1) {
     printf("sem_get\n");
     print_error;
+    exit(EXIT_FAILURE);
   }
   return id;
 }
@@ -21,6 +21,7 @@ int sem_create(int key, int n_sems) {
   if (id == -1) {
     printf("sem_create\n");
     print_error;
+    exit(EXIT_FAILURE);
   }
   return id;
 }
@@ -30,6 +31,7 @@ void sem_delete(int sem_id) {
   if (r == -1) {
     printf("sem_delete\n");
     print_error;
+    exit(EXIT_FAILURE);
   }
 }
 
@@ -38,7 +40,13 @@ int sem_op(int sem_id, int sem_num, short op, int wait) {
   s.sem_num = sem_num;
   s.sem_op = op;
   s.sem_flg = wait ? 0 : IPC_NOWAIT;
-  return semop(sem_id, &s, 1);
+  int r = semop(sem_id, &s, 1);
+  if (r == -1 && errno != EAGAIN) {
+    printf("sem_op\n");
+    print_error;
+    exit(EXIT_FAILURE);
+  }
+  return r;
 }
 
 void sem_set(int sem_id, int sem_num, int val) {
@@ -46,5 +54,6 @@ void sem_set(int sem_id, int sem_num, int val) {
   if (r == -1) {
     printf("sem_set\n");
     print_error;
+    exit(EXIT_FAILURE);
   }
 }

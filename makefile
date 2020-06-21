@@ -1,47 +1,54 @@
-CC = gcc -std=c89 -pedantic
+CC = gcc -std=c89 -pedantic -w
 INCLUDES = src/*.h
 COMMON_DEPS = $(INCLUDES) makefile
 
 TEST = build/test.o \
-	build/list.o \
 	build/random.o \
-	build/conf.o \
-	build/student.o \
-	build/group.o \
-	build/shm.o \
-	build/sem.o \
-	build/sort.o \
-	build/debug.o
-
-MANAGER = build/manager.o \
-	build/list.o \
-	build/random.o \
-	build/conf.o \
-	build/student.o \
-	build/group.o \
 	build/msg.o \
 	build/sem.o \
 	build/shm.o \
+	build/sig.o \
+	build/timer.o \
+	build/game.o \
 	build/debug.o
 
-STUDENT = build/child.o \
-	build/list.o \
+MASTER = build/master.o \
 	build/random.o \
-	build/conf.o \
-	build/student.o \
-	build/group.o \
 	build/msg.o \
 	build/sem.o \
 	build/shm.o \
-	build/sort.o \
+	build/sig.o \
+	build/timer.o \
+	build/game.o \
 	build/debug.o
 
-all: dir test manager student
+PLAYER = build/player.o \
+	build/random.o \
+	build/msg.o \
+	build/sem.o \
+	build/shm.o \
+	build/sig.o \
+	build/game.o \
+	build/debug.o
 
-manager: $(MANAGER)
+PAWN = build/pawn.o \
+	build/random.o \
+	build/msg.o \
+	build/sem.o \
+	build/shm.o \
+	build/sig.o \
+	build/game.o \
+	build/debug.o
+
+all: dir test master player pawn
+
+master: $(MASTER)
 	$(CC) -o bin/$@ $^
 
-student: $(STUDENT)
+player: $(PLAYER)
+	$(CC) -o bin/$@ $^
+
+pawn: $(PAWN)
 	$(CC) -o bin/$@ $^
 
 test: $(TEST)

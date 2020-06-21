@@ -1,17 +1,14 @@
 #ifndef CONF_H
 #define CONF_H
 
-#define SEM_KEY 42435
-#define DEBUG_KEY 8383
-#define START_SEM 0
-#define EVEN_TURN_SEM 1
-#define ODD_TURN_SEM 2
-#define SEM_NUM 3
+#define SHM_KEY 1234
+#define SEM_DEBUG_KEY 43243
+#define SEM_GAME_KEY 12344
+#define SEM_SQUARES_KEY 48374
+#define MSG_KEY 23442
 
-//extern void sem_op(int sem_id, int sem_num, short op, int wait);
-
-typedef enum {FALSE,TRUE} bool;
-
-void config_init();
+#define SEM_PLACEMENT 0
+#define SEM_ROUND_READY 1
+#define SEM_ROUND_START 2
 
 #endif

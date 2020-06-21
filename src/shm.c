@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <assert.h>
 #include <stdio.h>
 #include <errno.h>
 #include <sys/ipc.h>
@@ -30,6 +31,7 @@ shm* shm_create(int key, int size) {
   shm->id = id;
   shm->size = size;
   shm->ptr = ptr;
+  shm->free = ptr;
   shm->sem_id = sem_id;
   return shm;
 }
@@ -51,6 +53,12 @@ shm* shm_get(int key) {
   shm->ptr = ptr;
   shm->sem_id = sem_id;
   return shm;
+}
+
+void* shm_alloc(shm* shm, int bytes) {
+  void* r = shm->free;
+  shm->free += bytes;
+  return r;
 }
 
 void shm_read(shm* shm) {
