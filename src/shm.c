@@ -1,9 +1,7 @@
-#include <stdlib.h>
-#include <assert.h>
-#include <stdio.h>
-#include <errno.h>
+
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include "common.h"
 #include "shm.h"
 #include "sem.h"
 #include "debug.h"
@@ -50,12 +48,25 @@ shm* shm_get(int key) {
   int sem_id = sem_get(sem_key);
   shm->id = id;
   shm->size = 0;
+  shm->free = NULL;
   shm->ptr = ptr;
   shm->sem_id = sem_id;
   return shm;
 }
 
+int shm_get_free_space(shm* shm) {
+  // verifico che il processo creatore stia allocando memoria
+  assert(shm->free != NULL);
+  return shm->size - (shm->free - shm->ptr);
+}
+
 void* shm_alloc(shm* shm, int bytes) {
+  debug("[shm] size %d, free %d, bytes %d\n", shm->size, shm_get_free_space(shm), bytes);
+  assert(bytes > 0);
+  // verifico che il processo creatore stia allocando memoria
+  assert(shm->free != NULL);
+  // verifico che ci sia abbastanza spazio da allocare
+  assert(shm_get_free_space(shm) >= bytes);
   void* r = shm->free;
   shm->free += bytes;
   return r;

@@ -11,6 +11,7 @@ typedef struct shm {
 
 shm* shm_create(int key, int size);
 shm* shm_get();
+int shm_get_free_space(shm* shm);
 // allocate memory, only one process can use it
 void* shm_alloc(shm* shm, int bytes);
 void shm_read(shm* shm);

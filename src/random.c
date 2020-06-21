@@ -1,6 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
+#include "common.h"
 #include "random.h"
 #include "debug.h"
 

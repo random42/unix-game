@@ -2,6 +2,11 @@
   "files.associations": {
     "__tree": "c",
     "bitset": "c",
-    "set": "c"
-  }
+    "set": "c",
+    "memory_resource": "cpp",
+    "memory": "cpp"
+  },
+  "cSpell.enableFiletypes": [
+    "!markdown"
+  ]
 }
