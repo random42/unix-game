@@ -52,14 +52,14 @@ long get_game_size(int n_players, int n_pawns, int board_height, int board_width
 // ritorna la casella delle coordinate
 square* get_square(game* game, int x, int y);
 // distanza minima (in mosse) tra due caselle
-int min_distance(square* s1, square* s2);
+int squares_distance(square* s1, square* s2);
 // ritorna 1 se la casella from controlla la casella target
 // in base alle pedine presenti in campo
 // 0 altrimenti
-int square_controls(square* from, square* target);
+int square_controls(game* game, square* from, square* target);
 // stessa cosa ma controlla anche che il pedone abbia
 // le mosse necessarie per arrivare alla casella
-int pawn_controls(pawn* pawn, square* target);
+int pawn_controls(game* game, pawn* pawn, square* target);
 // posiziona una bandiera nella casella
 void place_flag(square* square, int points);
 // posiziona la pedina nella casella

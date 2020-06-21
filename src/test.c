@@ -62,11 +62,11 @@ game* create_game(int n_players, int n_pawns, int max_time, int board_height, in
     p->pawns = shm_alloc(mem, n_pawns * sizeof(pawn*));
     for (int j = 0; j < n_pawns; j++) {
       p->pawns[j] = shm_alloc(mem, sizeof(pawn));
-      pawn* pawn = p->pawns[j];
-      pawn->pid = -1;
-      pawn->moves_left = max_pawn_moves;
-      pawn->player = p;
-      pawn->square = NULL;
+      pawn* pn = p->pawns[j];
+      pn->pid = -1;
+      pn->moves_left = max_pawn_moves;
+      pn->player = p;
+      pn->square = NULL;
     }
   }
   return g;
@@ -74,17 +74,37 @@ game* create_game(int n_players, int n_pawns, int max_time, int board_height, in
 
 void test_game() {
   game* g = create_game(3, 3, 3, 4, 6, 2, 3, 10, 10, 100);
-  player* p1 = g->players[0];
-  player* p2 = g->players[1];
-  player* p3 = g->players[2];
+  int flag_points = 321;
+  pawn* p1 = g->players[0]->pawns[0];
+  pawn* p2 = g->players[1]->pawns[0];
+  pawn* p3 = g->players[2]->pawns[0];
   square* s1 = get_square(g, 0, 2);
   square* s2 = get_square(g, 3, 1);
   square* s3 = get_square(g, 5, 3);
   square* s4 = get_square(g, 0, 0);
-  place_pawn(p1->pawns[0], s1);
-  place_pawn(p2->pawns[0], s2);
-  place_pawn(p3->pawns[0], s3);
-  place_flag(s4, 321);
+  place_pawn(p1, s1);
+  place_pawn(p2, s2);
+  place_pawn(p3, s3);
+  place_flag(s4, flag_points);
+  assert(squares_distance(s1, s3) == 6);
+  assert(square_controls(g, s1, get_square(g, 1, 1)));
+  assert(square_controls(g, s2, get_square(g, 1, 1)));
+  assert(square_controls(g, s1, get_square(g, 2, 2)));
+  assert(square_controls(g, s2, get_square(g, 2, 2)));
+  assert(square_controls(g, s2, get_square(g, 2, 1)));
+  assert(!square_controls(g, s1, get_square(g, 2, 1)));
+  assert(pawn_controls(g, p1, get_square(g, 1, 1)));
+  assert(pawn_controls(g, p1, p1->square));
+  p1->moves_left = 0;
+  assert(pawn_controls(g, p1, p1->square));
+  assert(!pawn_controls(g, p1, get_square(g, 1, 1)));
+  p1->moves_left = 2;
+  print_game_state(g);
+  move_pawn(p1, get_square(g, 0, 1));
+  print_game_state(g);
+  move_pawn(p1, get_square(g, 0, 0));
+  remove_captured_flags(g);
+  assert(p1->player->points == flag_points);
   print_game_state(g);
   print_game_stats(g);
 }

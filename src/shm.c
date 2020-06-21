@@ -61,7 +61,7 @@ int shm_get_free_space(shm* shm) {
 }
 
 void* shm_alloc(shm* shm, int bytes) {
-  debug("[shm] size %d, free %d, bytes %d\n", shm->size, shm_get_free_space(shm), bytes);
+  // debug("[shm] size %d, free %d, bytes %d\n", shm->size, shm_get_free_space(shm), bytes);
   assert(bytes > 0);
   // verifico che il processo creatore stia allocando memoria
   assert(shm->free != NULL);

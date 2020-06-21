@@ -36,8 +36,32 @@ long get_game_size(int n_players, int n_pawns, int board_height, int board_width
     (pawns * sizeof(pawn));
 }
 
-int min_distance(square* s1, square* s2) {
+int squares_distance(square* s1, square* s2) {
   return abs(s1->x - s2->x) + abs(s1->y - s2->y);
+}
+
+int square_controls(game* game, square* from, square* target) {
+  int distance = squares_distance(from, target);
+  int i;
+  int min = INT_MAX;
+  for (i = 0; i < get_n_squares(game); i++) {
+    square* s = game->squares[i];
+    int d = squares_distance(s, target);
+    if (s->pawn != NULL) {
+      if (d < distance) {
+        return FALSE;
+      }
+      else if (d < min) {
+        min = d;
+      }
+    }
+  }
+  return distance <= min;
+}
+
+int pawn_controls(game* game, pawn* pawn, square* target) {
+  assert(pawn->square != NULL);
+  return pawn->moves_left >= squares_distance(pawn->square, target) && square_controls(game, pawn->square, target);
 }
 
 void place_flag(square* square, int points) {
@@ -51,6 +75,8 @@ void place_pawn(pawn* pawn, square* square) {
 }
 
 void move_pawn(pawn* pawn, square* square) {
+  assert(pawn->square != NULL);
+  assert(squares_distance(pawn->square, square) == 1);
   assert(pawn->moves_left > 0);
   pawn->square->pawn = NULL;
   pawn->square = square;
@@ -126,6 +152,6 @@ void print_game_stats(game* game) {
   }
   printf("Round giocati: %d\n", game->rounds_played);
   printf("Punti totali ottenuti dai giocatori: %d\n", total_points);
-  printf("Tempo di gioco: %.3lf\n", game_time);
+  printf("Tempo di gioco: %.3lf secondi\n", game_time);
   printf("Punti totali su tempo di gioco: %.2lf\n", total_points / game_time);
 }
