@@ -90,6 +90,7 @@ void init_game() {
 }
 
 void init() {
+  random_init();
   debug_create(SEM_DEBUG_KEY);
   init_game();
   game_sem = sem_create(SEM_GAME_KEY, 3);
@@ -101,7 +102,7 @@ void init() {
 }
 
 void start() {
-
+  fork_and_exec("./bin/player", NULL);
 }
 
 int main(int argc, char* argv[]) {

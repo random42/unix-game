@@ -4,6 +4,14 @@
 #include "debug.h"
 #include "process.h"
 
+int get_process_id() {
+  return getpid();
+}
+
+int get_parent_process_id() {
+  return getppid();
+}
+
 int get_process_group_id() {
   return getpgid(0);
 }
@@ -12,6 +20,26 @@ void set_process_group_id(int pid, int pgid) {
   int r = setpgid(pid, pgid);
   if (r == -1) {
     error("setpgid\n");
+  }
+}
+
+int fork_and_exec(char* path, char** argv) {
+  int child = fork();
+  switch(child) {
+    case -1: { // error
+      error("fork\n");
+      break;
+    }
+    case 0: { // child process
+      int r = execv(path, argv);
+      if (r == -1) {
+        error("execv\n");
+      }
+      break;
+    }
+    default: { // parent process
+      return child;
+    }
   }
 }
 
