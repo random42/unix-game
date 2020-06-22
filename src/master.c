@@ -71,6 +71,10 @@ void init() {
   debug_create(SEM_DEBUG_KEY);
   init_game();
   game_sem = sem_create(SEM_GAME_KEY, 3);
+  // imposto i semafori ai valori iniziali
+  sem_set(game_sem, SEM_PLACEMENT, 0);
+  sem_set(game_sem, SEM_ROUND_READY, _game->n_players);
+  sem_set(game_sem, SEM_ROUND_START, 1);
   squares_sem = sem_create(SEM_SQUARES_KEY, get_n_squares(_game));
   msg_queue = msg_init(MSG_KEY);
   // imposto l'id di questo processo come l'id del gruppo di processi
@@ -80,6 +84,15 @@ void init() {
 
 void start() {
   spawn_players();
+  placement_phase();
+}
+
+void placement_phase() {
+  printf("Fase di posizionamento iniziata\n");
+  sem_op(game_sem, SEM_PLACEMENT, 1, TRUE);
+  int end = (_game->n_pawns * _game->n_players) + 1;
+  sem_op(game_sem, SEM_PLACEMENT, -end, TRUE);
+  printf("Fase di posizionamento terminata\n");
 }
 
 void play_round() {

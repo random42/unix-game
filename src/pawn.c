@@ -36,7 +36,6 @@ void init() {
 }
 
 void start() {
-  debug("I'm pawn %d\n", me->id);
 }
 
 void play_round() {

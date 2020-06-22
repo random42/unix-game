@@ -43,14 +43,13 @@ ciò significa che non controllavano la casella in cui si dirigono.
 
 # Flusso e sincronizzazione dei processi
 
-Il processo master inizialmente crea il gioco e ne salva i dati
-in memoria condivisa. Importa il proprio id di processo come id del suo gruppo di processi, che verrà ereditato da tutti i processi figli in modo da mandare facilmente segnali a tutti i processi del programma. Dopodiché crea i processi giocatori, i quali creano a sua volte i processi pedine, e inizia la fase di posizionamento delle pedine.
+Il processo master inizialmente crea il gioco e ne salva i dati in memoria condivisa. Importa il proprio id di processo come id del suo gruppo di processi, che verrà ereditato da tutti i processi figli in modo da mandare facilmente segnali a tutti i processi del programma. Dopodiché crea i processi giocatori, i quali creano a sua volte i processi pedine, e inizia la fase di posizionamento delle pedine.
 
 ## Fase di posizionamento
 
-Questa fase è sincronizzata tramite il semaforo *SEM_PLACEMENT*. Per iniziare il posizionamento il master imposta *SEM_PLACEMENT* a 0. Ogni giocatore è identificato da un numero *g* che va da 0 a *SO_NUM_G* a lui noto. Una variabile *placement_round* che va da 0 a *SO_NUM_P* identifica il round in cui ogni giocatore posiziona una pedina. Il round di posizionamento per un giocatore *g* è quindi definito da `r = (placement_round * SO_NUM_G) + g`.
+Questa fase è sincronizzata tramite il semaforo *SEM_PLACEMENT*. Inizialmente il semaforo ha valore 0. Per iniziare la fase di posizionamento il master imposta *SEM_PLACEMENT* a 1. Ogni giocatore è identificato da un numero *g* che va da 1 a *SO_NUM_G* a lui noto. Una variabile *placement_round* che va da 0 a *SO_NUM_P* identifica il round in cui ogni giocatore posiziona una pedina. Il round di posizionamento per un giocatore *g* è quindi definito da `r = (placement_round * SO_NUM_G) + g`.
 
-Ogni giocatore effettua un'operazione sul semaforo pari a *-r*, posiziona la pedina scrivendo nella memoria condivisa (il cui accesso è sincronizzato) e aumenta il semaforo di *r+1*. Il master aspetta il termine di questa fase effettuando un'operazione sul semaforo pari a `-(SO_NUM_G * SO_NUM_P)`.
+Ogni giocatore effettua un'operazione sul semaforo pari a *-r*, posiziona la pedina scrivendo nella memoria condivisa (il cui accesso è sincronizzato) e aumenta il semaforo di *r+1*. Il master aspetta il termine di questa fase effettuando un'operazione sul semaforo pari a `-((SO_NUM_G * SO_NUM_P) + 1)`.
 
 ## Fase di gioco
 

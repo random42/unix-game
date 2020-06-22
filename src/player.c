@@ -52,12 +52,18 @@ void spawn_pawns() {
 }
 
 void start() {
-  debug("I'm player %d\n", me->id);
   spawn_pawns();
+  placement_phase();
 }
 
-void place_pawns() {
-
+void placement_phase() {
+  for (int round = 0; round < _game->n_pawns; round++) {
+    int value = (round * _game->n_players) + me->id;
+    sem_op(game_sem, SEM_PLACEMENT, -value, TRUE);
+    printf("%d placing\n", me->id);
+    sleep(1);
+    sem_op(game_sem, SEM_PLACEMENT, value + 1, TRUE);
+  }
 }
 
 void play_round() {
