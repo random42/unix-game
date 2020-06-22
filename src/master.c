@@ -31,6 +31,11 @@ void on_exit() {
 
 void init_game() {
   char* s = getenv("SO_NUM_G");
+  // per essere sicuri di aver impostato l'ambiente del processo
+  if (s == NULL) {
+    printf("Ricordati di impostare le variabili d'ambiente!\n");
+    exit(EXIT_FAILURE);
+  }
   int n_players = atoi(getenv("SO_NUM_G"));
   int n_pawns = atoi(getenv("SO_NUM_P"));
   int max_time = atoi(getenv("SO_MAX_TIME"));

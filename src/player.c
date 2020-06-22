@@ -38,10 +38,9 @@ void init() {
 
 void spawn_pawns() {
   shm_write(mem);
-  int first_id = get_player_first_pawn(_game, id);
+  int pawn_id = get_player_first_pawn(_game, id)->id;
   for (int i = 0; i < _game->n_pawns; i++) {
-    debug_count();
-    player* p = get_player(_game, i);
+    pawn* p = get_pawn(_game, pawn_id++);
     char id_string[5];
     sprintf(id_string, "%d", p->id);
     char* args[] = {id_string, NULL};
