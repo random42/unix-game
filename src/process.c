@@ -23,6 +23,11 @@ void set_process_group_id(int pid, int pgid) {
   }
 }
 
+void wait_for_children() {
+  int child;
+  while ((child = wait(NULL)) != -1) continue;
+}
+
 int fork_and_exec(char* path, char** argv) {
   int child = fork();
   switch(child) {
@@ -58,18 +63,18 @@ void set_signal_handler(int signal, void (*f)(int), int atomic) {
   }
 }
 
-void send_sig(int pid, int sig) {
+void send_signal(int pid, int sig) {
   int r = kill(pid, sig);
   if (r == -1) {
     error("send_sig\n");
   }
 }
 
-void wait_sig(int sig) {
+void wait_signal(int sig) {
   sigset_t set;
   // azzera il set di segnali
   sigemptyset(&set);
-  // aggiungi il segnale al set di segnali
+  // aggiunge il segnale al set di segnali
   sigaddset(&set, sig);
   int r = sigwait(&set, NULL);
   if (r == -1) {

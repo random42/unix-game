@@ -5,6 +5,8 @@ int get_process_id();
 int get_parent_process_id();
 int get_process_group_id();
 void set_process_group_id(int pid, int pgid);
+// attende che tutti i processi figli terminino
+void wait_for_children();
 // esegue un nuovo processo
 int fork_and_exec(char* path, char** argv);
 // imposta una funzione come handler di un segnale
@@ -12,8 +14,8 @@ int fork_and_exec(char* path, char** argv);
 // puo' essere interrotta da altri segnali o meno
 void set_signal_handler(int signal, void (*f)(int), int atomic);
 // manda un segnale
-void send_sig(int pid, int sig);
+void send_signal(int pid, int sig);
 // attende un segnale
-void wait_sig(int sig);
+void wait_signal(int sig);
 
 #endif

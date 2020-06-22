@@ -4,6 +4,7 @@
 #define PRINT 0
 
 static int sem;
+static int count = 0;
 
 void debug_create(int key) {
   sem = sem_create(key, 1);
@@ -12,6 +13,14 @@ void debug_create(int key) {
 
 void debug_get(int key) {
   sem = sem_get(key);
+}
+
+void debug_count() {
+  if (DEBUG) {
+    P;
+    printf("[%d] count %d\n", getpid(), count++);
+    V;
+  }
 }
 
 void debug_close() {

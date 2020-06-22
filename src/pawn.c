@@ -7,11 +7,11 @@
 #include "msg.h"
 #include "random.h"
 #include "debug.h"
-#include "player.h"
+#include "pawn.h"
 
 shm* mem;
 game* _game;
-player* me;
+pawn* me;
 int game_sem;
 int squares_sem;
 int msg_queue;
@@ -19,19 +19,29 @@ int id;
 int pid;
 
 void on_exit() {
-  wait_for_children();
 }
 
 void find_me() {
   shm_read(mem);
-  for (int i = 0; i < _game->n_players && me == NULL; i++) {
-    player* p = _game->players[i];
+  int player_pid = get_parent_process_id();
+  player* my_player = NULL;
+  for (int i = 0; i < _game->n_players && my_player == NULL; i++) {
+    player* pl = _game->players[i];
+    if (pl->pid == player_pid) {
+      my_player = pl;
+    }
+  }
+  if (my_player == NULL) {
+    error("Player with pid %d not found\n", player_pid);
+  }
+  for (int j = 0; j < _game->n_pawns && me == NULL; j++) {
+    pawn* p = my_player->pawns[j];
     if (p->id == id) {
       me = p;
     }
   }
   if (me == NULL) {
-    error("player %d not found\n", id);
+    error("Pawn with id %d not found\n", id);
   }
   shm_stop_read(mem);
 }
@@ -48,36 +58,28 @@ void init() {
   find_me();
 }
 
-void spawn_pawns() {
-  shm_write(mem);
-  for (int i = 0; i < _game->n_pawns; i++) {
-    debug_count();
-    pawn* p = me->pawns[i];
-    char id_string[5];
-    sprintf(id_string, "%d", p->id);
-    char* args[] = {id_string, NULL};
-    int pid = fork_and_exec("./bin/pawn", args);
-    p->pid = pid;
-    set_process_group_id(pid, get_process_group_id());
-  }
-  shm_stop_write(mem);
-}
-
 void start() {
-  debug("I'm player %d\n", me->id);
-  spawn_pawns();
-}
-
-void place_pawns() {
-
+  debug("I'm pawn %d\n", me->id);
 }
 
 void play_round() {
 
 }
 
-square* create_strategy(pawn* pawn) {
-  return NULL;
+square* get_target() {
+
+}
+
+void play() {
+
+}
+
+Direction choose_direction(square* target) {
+
+}
+
+void move(square* square) {
+
 }
 
 void wait_round_end() {

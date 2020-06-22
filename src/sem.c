@@ -57,3 +57,13 @@ void sem_set(int sem_id, int sem_num, int val) {
     exit(EXIT_FAILURE);
   }
 }
+
+int sem_get_value(int sem_id, int sem_num) {
+  int r = semctl(sem_id, sem_num, GETVAL);
+  if (r == -1) {
+    printf("sem_set\n");
+    print_error;
+    exit(EXIT_FAILURE);
+  }
+  return r;
+}

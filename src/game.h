@@ -1,8 +1,10 @@
 #ifndef GAME_H
 #define GAME_H
 
-enum Direction {UP = 0, DOWN = 1, RIGHT = 2, LEFT = 3}; 
+typedef enum Direction {UP = 0, DOWN = 1, RIGHT = 2, LEFT = 3} Direction; 
 
+// bisogna dichiarare prima le strutture per
+// utilizzare strutture circolari
 struct pawn;
 struct flag;
 
@@ -15,13 +17,14 @@ typedef struct square {
 } square;
 
 typedef struct player {
-  int pid;
   int id;
+  int pid;
   int points;
   struct pawn** pawns;
 } player;
 
 typedef struct pawn {
+  int id;
   int pid;
   int moves_left;
   player* player;

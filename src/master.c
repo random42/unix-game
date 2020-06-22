@@ -19,6 +19,7 @@ int squares_sem;
 int msg_queue;
 
 void on_exit() {
+  wait_for_children();
   msg_close(msg_queue);
   shm_delete(mem);
   sem_delete(game_sem);
@@ -55,17 +56,19 @@ game* create_game(int n_players, int n_pawns, int max_time, int board_height, in
     s->y = i / board_width;
   }
   g->players = shm_alloc(mem, n_players * sizeof(player*));
+  int pawn_id = 0;
   for (i = 0; i < n_players; i++) {
     g->players[i] = shm_alloc(mem, sizeof(player));
     player* p = g->players[i];
-    p->pid = -1;
-    p->id = i;
+    p->id = i + 1;
+    p->pid = 0;
     p->points = 0;
     p->pawns = shm_alloc(mem, n_pawns * sizeof(pawn*));
     for (int j = 0; j < n_pawns; j++) {
       p->pawns[j] = shm_alloc(mem, sizeof(pawn));
       pawn* pn = p->pawns[j];
-      pn->pid = -1;
+      pn->id = pawn_id++;
+      pn->pid = 0;
       pn->moves_left = max_pawn_moves;
       pn->player = p;
       pn->square = NULL;
@@ -89,6 +92,24 @@ void init_game() {
   _game = create_game(n_players, n_pawns, max_time, board_height, board_width, flag_min, flag_max, round_score, max_pawn_moves, min_hold_nsec);
 }
 
+void spawn_players() {
+  debug_count();
+  shm_write(mem);
+  for (int i = 0; i < _game->n_players; i++) {
+    debug_count();
+    player* p = _game->players[i];
+    // passo l'id del giocatore come argomento del processo
+    // e quindi devo convertirlo in stringa
+    char id_string[5];
+    sprintf(id_string, "%d", p->id);
+    char* args[] = {id_string, NULL};
+    int pid = fork_and_exec("./bin/player", args);
+    p->pid = pid;
+    set_process_group_id(pid, get_process_group_id());
+  }
+  shm_stop_write(mem);
+}
+
 void init() {
   random_init();
   debug_create(SEM_DEBUG_KEY);
@@ -102,7 +123,31 @@ void init() {
 }
 
 void start() {
-  fork_and_exec("./bin/player", NULL);
+  spawn_players();
+}
+
+void play_round() {
+
+}
+
+void place_flags() {
+
+}
+
+void wait_players() {
+
+}
+
+void wait_flag_captures() {
+
+}
+
+void end_round() {
+
+}
+
+void end_game() {
+  
 }
 
 int main(int argc, char* argv[]) {

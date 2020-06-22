@@ -6,10 +6,11 @@
 #include "sem.h"
 #include "debug.h"
 
-static int LOCK_SEMS = 3;
-static int READ = 0; // num of readers
-static int WRITE = 1; // 0 if writing, 1 otherwise
-static int WRITE_WAIT = 2; // number of writers waiting
+static int LOCK_SEMS = 4;
+static int WRITE_LOCK = 0; // lock di scrittura
+static int READ_LOCK = 1; // lock per modificare il numero di readers
+static int READERS = 2; // numero di lettori
+static int WRITE_WAIT = 3; // scrittori in attesa
 
 // create shared memory
 shm* shm_create(int key, int size) {
@@ -22,10 +23,12 @@ shm* shm_create(int key, int size) {
   if (ptr == (void*)-1) {
     error("shmat\n");
   }
-  int sem_key = key;
-  int sem_id = sem_create(sem_key, LOCK_SEMS);
-  // writing lock is free at start
-  sem_set(sem_id, WRITE, 1);
+  int sem_id = sem_create(key + 1, LOCK_SEMS);
+  // imposta i semafori ai valori iniziali
+  sem_set(sem_id, READ_LOCK, 1);
+  sem_set(sem_id, WRITE_LOCK, 1);
+  sem_set(sem_id, READERS, 0);
+  sem_set(sem_id, WRITE_WAIT, 0);
   shm->id = id;
   shm->size = size;
   shm->ptr = ptr;
@@ -44,8 +47,7 @@ shm* shm_get(int key) {
   if (ptr == (void*)-1) {
     error("shmat\n");
   }
-  int sem_key = key;
-  int sem_id = sem_get(sem_key);
+  int sem_id = sem_get(key + 1);
   shm->id = id;
   shm->size = 0;
   shm->free = NULL;
@@ -73,31 +75,34 @@ void* shm_alloc(shm* shm, int bytes) {
 }
 
 void shm_read(shm* shm) {
-  // waiting for writers to write
   sem_op(shm->sem_id, WRITE_WAIT, 0, TRUE);
-  // increase readers by 1
-  sem_op(shm->sem_id, READ, 1, TRUE);
+  sem_op(shm->sem_id, READ_LOCK, -1, TRUE);
+  sem_op(shm->sem_id, READERS, 1, TRUE);
+  int readers = sem_get_value(shm->sem_id, READERS);
+  if (readers == 1) {
+    sem_op(shm->sem_id, WRITE_LOCK, -1, TRUE);
+  }
+  sem_op(shm->sem_id, READ_LOCK, 1, TRUE);
 }
 
 void shm_stop_read(shm* shm) {
-  // decrease readers by 1
-  sem_op(shm->sem_id, READ, -1, TRUE);
+  sem_op(shm->sem_id, READ_LOCK, -1, TRUE);
+  sem_op(shm->sem_id, READERS, -1, TRUE);
+  int readers = sem_get_value(shm->sem_id, READERS);
+  if (readers == 0) {
+    sem_op(shm->sem_id, WRITE_LOCK, 1, TRUE);
+  }
+  sem_op(shm->sem_id, READ_LOCK, 1, TRUE);
 }
 
 void shm_write(shm* shm) {
-  // increase writers waiting by 1
   sem_op(shm->sem_id, WRITE_WAIT, 1, TRUE);
-  // wait for readers to go to 0
-  sem_op(shm->sem_id, READ, 0, TRUE);
-  // get writing lock
-  sem_op(shm->sem_id, WRITE, -1, TRUE);
+  sem_op(shm->sem_id, WRITE_LOCK, -1, TRUE);
+  sem_op(shm->sem_id, WRITE_WAIT, -1, TRUE);
 }
 
 void shm_stop_write(shm* shm) {
-  // release writing lock
-  sem_op(shm->sem_id, WRITE, 1, TRUE);
-  // decrease writers waiting by 1
-  sem_op(shm->sem_id, WRITE_WAIT, -1, TRUE);
+  sem_op(shm->sem_id, WRITE_LOCK, 1, TRUE);
 }
 
 void shm_delete(shm* shm) {

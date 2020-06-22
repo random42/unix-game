@@ -14,7 +14,7 @@ static long msg_size = sizeof(message) - sizeof(long);
 int msg_init(int key) {
   int id = msgget(key, IPC_CREAT | 0600);
   if (id == -1) {
-    error("msg_init");
+    error("msg_init\n");
   }
   return id;
 }
