@@ -13,55 +13,136 @@ double elapsed_time(struct timeval* from) {
   return now-start;
 }
 
-square* get_square(game* game, int x, int y) {
-  // controllo se le coordinate sono valide
-  assert(x >= 0 && x < game->board_width);
-  assert(y >= 0 && y < game->board_height);
-  return game->squares[(y * game->board_width) + x];
+int get_n_squares(game* g) {
+  return g->board_height * g->board_width;
 }
 
-int get_n_squares(game* game) {
-  return game->board_height * game->board_width;
+pawn* get_first_pawn(game* g) {
+  return (void*)get_first_player(g) + sizeof(player) * g->n_players;
 }
 
-long get_game_size(int n_players, int n_pawns, int board_height, int board_width) {
-  int squares = board_height * board_width;
-  int pawns = n_pawns * n_players;
+player* get_first_player(game* g) {
+  return (void*)get_first_square(g) + sizeof(square) * get_n_squares(g);
+}
+
+square* get_first_square(game* g) {
+  return (void*)g + sizeof(game);
+}
+
+pawn* get_pawn(game* g, int id) {
+  // gli id partono da 1 mentre gli indici da 0
+  return &get_first_pawn(g)[id - 1];
+}
+
+player* get_player(game* g, int id) {
+  return &get_first_player(g)[id - 1];
+}
+
+int get_square_index(game* g, int x, int y) {
+  // l'indice della casella è il numero della riga 
+  // per il numero di righe più il numero della colonna
+  return (y * g->board_width) + x;
+}
+
+square* get_square(game* g, int i) {
+  return &get_first_square(g)[i];
+}
+
+square* get_square_in(game* g, int x, int y) {
+  return get_square(g, get_square_index(g, x, y));
+}
+
+pawn* get_player_first_pawn(game* g, int player_id) {
+  pawn* p = get_first_pawn(g);
+  while (p->player_id != player_id) {
+    p = get_pawn(g, p->id + 1);
+  }
+  return p;
+}
+
+square* get_pawn_square(game* g, pawn* p) {
+  return get_square(g, get_square_index(g, p->x, p->y));
+}
+
+int get_game_size(int n_players, int n_pawns, int board_height, int board_width) {
   return sizeof(game) + 
-    (squares * sizeof(square*)) +
-    (squares * sizeof(square)) +
-    (n_players * sizeof(player*)) +
-    (n_players * sizeof(player)) +
-    (pawns * sizeof(pawn*)) +
-    (pawns * sizeof(pawn));
+    (sizeof(square) * board_height * board_width) +
+    (sizeof(player) * n_players) +
+    (sizeof(pawn) * n_players * n_pawns);
+}
+
+game* create_game(void* ptr, int n_players, int n_pawns, int max_time, int board_height, int board_width, int flag_min, int flag_max, int round_score, int max_pawn_moves, int min_hold_nsec) {
+  game* g = ptr;
+  g->n_players = n_players;
+  g->n_pawns = n_pawns;
+  g->max_time = max_time;
+  g->board_height = board_height;
+  g->board_width = board_width;
+  g->flag_min = flag_min;
+  g->flag_max = flag_max;
+  g->round_score = round_score;
+  g->max_pawn_moves = max_pawn_moves;
+  g->min_hold_nsec = min_hold_nsec;
+  g->rounds_played = 0;
+  int squares = board_height * board_width;
+  for (int i = 0; i < squares; i++) {
+    square* s = get_square(g, i);
+    s->has_flag = FALSE;
+    s->flag_points = 0;
+    s->pawn_id = 0;
+    // la coordinata x è il resto della divisione
+    s->x = i % board_width;
+    // la coordinata y è il risultato della divisione
+    s->y = i / board_width;
+  }
+  int player_id = 1;
+  int pawn_id = 1;
+  for (player_id = 1; player_id <= n_players; player_id++) {
+    player* p = get_player(g, player_id);
+    p->id = player_id;
+    p->pid = 0;
+    p->points = 0;
+    for (int j = 0; j < n_pawns; j++) {
+      pawn* pawn = get_pawn(g, pawn_id);
+      pawn->id = pawn_id++;
+      pawn->pid = 0;
+      pawn->moves_left = max_pawn_moves;
+      pawn->player_id = player_id;
+      pawn->x = -1;
+      pawn->y = -1;
+    }
+  }
+  return g;
 }
 
 int squares_distance(square* s1, square* s2) {
   return abs(s1->x - s2->x) + abs(s1->y - s2->y);
 }
 
-int square_controls(game* game, square* from, square* target) {
+int square_controls(game* g, square* from, square* target) {
+  // distanza tra le due caselle
   int distance = squares_distance(from, target);
-  int i;
-  int min = INT_MAX;
-  for (i = 0; i < get_n_squares(game); i++) {
-    square* s = game->squares[i];
+  for (int i = 0; i < get_n_squares(g); i++) {
+    square* s = get_square(g, i);
     int d = squares_distance(s, target);
-    if (s->pawn != NULL) {
+    if (s->pawn_id) {
+      // se c'e' un pedone e la distanza tra "s" e "target"
+      // è minore della distanza tra "from" e "target"
+      // allora "from" non controlla la casella
       if (d < distance) {
         return FALSE;
       }
-      else if (d < min) {
-        min = d;
-      }
     }
   }
-  return distance <= min;
+  return TRUE;
 }
 
-int pawn_controls(game* game, pawn* pawn, square* target) {
-  assert(pawn->square != NULL);
-  return pawn->moves_left >= squares_distance(pawn->square, target) && square_controls(game, pawn->square, target);
+int pawn_controls(game* g, pawn* pawn, square* target) {
+  square* from = get_pawn_square(g, pawn);
+  // controllo che il pedone abbia le mosse necessarie per arrivare
+  // alla casella "target"
+  return pawn->moves_left >= squares_distance(from, target) 
+    && square_controls(g, from, target);
 }
 
 void place_flag(square* square, int points) {
@@ -70,53 +151,55 @@ void place_flag(square* square, int points) {
 }
 
 void place_pawn(pawn* pawn, square* square) {
-  pawn->square = square;
-  square->pawn = pawn;
+  pawn->x = square->x;
+  pawn->y = square->y;
+  square->pawn_id = pawn->id;
 }
 
-void move_pawn(pawn* pawn, square* square) {
-  assert(pawn->square != NULL);
-  assert(squares_distance(pawn->square, square) == 1);
-  assert(pawn->moves_left > 0);
-  pawn->square->pawn = NULL;
-  pawn->square = square;
-  square->pawn = pawn;
+void move_pawn(game* g, pawn* pawn, square* to) {
+  square* from = get_pawn_square(g, pawn);
+  from->pawn_id = 0;
+  to->pawn_id = pawn->id;
+  pawn->x = to->x;
+  pawn->y = to->y;
   pawn->moves_left--;
 }
 
-void remove_captured_flags(game* game) {
-  square** squares = game->squares;
-  int size = get_n_squares(game);
-  int i;
-  for (i = 0; i < size; i++) {
-    square* s = squares[i];
-    if (s->has_flag && s->pawn != NULL) {
+void remove_captured_flags(game* g) {
+  for (int i = 0; i < get_n_squares(g); i++) {
+    square* s = get_square(g, i);
+    if (s->has_flag && s->pawn_id) {
       s->has_flag = FALSE;
-      s->pawn->player->points += s->flag_points;
+      pawn* p = get_pawn(g, s->pawn_id);
+      player* pl = get_player(g, p->player_id);
+      pl->points += s->flag_points;
       s->flag_points = 0;
     }
   }
 }
 
-void print_square(square* s) {
+void print_square(game* g, square* s) {
   // non ci puo' essere una pedina su una casella con bandiera
   // nei momenti in cui si printa lo stato
+  // quindi si printa o F {punti della bandiera}
+  // o P {id del player}
   if (s->has_flag) {
-    // diamo uno spazio in piu' alle bandiere
-    printf(" F %3d ", s->flag_points);
+    printf(" F %2d  ", s->flag_points);
   }
-  else if (s->pawn != NULL) {
-    printf(" P %2d  ", s->pawn->player->id);
+  else if (s->pawn_id) {
+    player* p = get_player(g, get_pawn(g, s->pawn_id)->player_id);
+    // stampo l'id del player che controlla la pedina
+    printf(" P %2d  ", p->id);
   }
   else {
     printf("   -   ");
   }
 }
 
-void print_game_state(game* game) {
+void print_game_state(game* g) {
   // si usa l'intero in mezzo a %d per stampare alla stessa altezza
-  int h = game->board_height;
-  int w = game->board_width;
+  int h = g->board_height;
+  int w = g->board_width;
   printf("\nSTATO DEL GIOCO\n\n");
   printf("     ");
   for (int j = 0; j < w; j++) {
@@ -126,31 +209,32 @@ void print_game_state(game* game) {
   for (int i = 0; i < h; i++) {
     printf("%3d  ", i);
     for (int j = 0; j < w; j++) {
-      square* s = get_square(game, j, i);
-      print_square(s);
+      square* s = get_square(g, get_square_index(g, j, i));
+      print_square(g, s);
     }
     printf("\n\n");
   }
 }
 
-void print_game_stats(game* game) {
+void print_game_stats(game* g) {
   printf("\n METRICHE DEL GIOCO\n\n");
-  double game_time = elapsed_time(&game->start_time);
-  int total_moves = game->max_pawn_moves * game->n_pawns;
+  double game_time = elapsed_time(&g->start_time);
+  int total_moves = g->max_pawn_moves * g->n_pawns;
   int total_points = 0;
-  for (int i = 0; i < game->n_players; i++) {
-    player* p = game->players[i];
+  for (int i = 0; i < g->n_players; i++) {
+    player* p = get_player(g, i + 1);
     total_points += p->points;
     int moves_left = 0;
-    for (int j = 0; j < game->n_pawns; j++) {
-      pawn* pawn = p->pawns[j];
+    int first_pawn_id = get_player_first_pawn(g, p->id)->id;
+    for (int j = 0; j < g->n_pawns; j++) {
+      pawn* pawn = get_pawn(g, first_pawn_id + j);
       moves_left += pawn->moves_left;
     }
     int moves_made = total_moves - moves_left;
     printf("Giocatore %d:\n\tMosse giocate: %d\n\tMosse rimaste: %d\n\tMosse utilizzate su mosse totali: %.2lf\n\tPunti ottenuti: %d\n\tPunti su mosse utilizzate: %.2lf\n",
       p->id, moves_made, moves_left, (double)moves_made / total_moves, p->points, (double)p->points / moves_made);
   }
-  printf("Round giocati: %d\n", game->rounds_played);
+  printf("Round giocati: %d\n", g->rounds_played);
   printf("Punti totali ottenuti dai giocatori: %d\n", total_points);
   printf("Tempo di gioco: %.3lf secondi\n", game_time);
   printf("Punti totali su tempo di gioco: %.2lf\n", total_points / game_time);

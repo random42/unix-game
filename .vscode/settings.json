@@ -4,7 +4,9 @@
     "bitset": "c",
     "set": "c",
     "memory_resource": "cpp",
-    "memory": "cpp"
+    "memory": "cpp",
+    "__locale": "c",
+    "locale": "c"
   },
   "cSpell.enableFiletypes": [
     "!markdown"

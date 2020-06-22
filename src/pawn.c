@@ -21,31 +21,6 @@ int pid;
 void on_exit() {
 }
 
-void find_me() {
-  shm_read(mem);
-  int player_pid = get_parent_process_id();
-  player* my_player = NULL;
-  for (int i = 0; i < _game->n_players && my_player == NULL; i++) {
-    player* pl = _game->players[i];
-    if (pl->pid == player_pid) {
-      my_player = pl;
-    }
-  }
-  if (my_player == NULL) {
-    error("Player with pid %d not found\n", player_pid);
-  }
-  for (int j = 0; j < _game->n_pawns && me == NULL; j++) {
-    pawn* p = my_player->pawns[j];
-    if (p->id == id) {
-      me = p;
-    }
-  }
-  if (me == NULL) {
-    error("Pawn with id %d not found\n", id);
-  }
-  shm_stop_read(mem);
-}
-
 void init() {
   pid = get_process_id();
   random_init();
@@ -55,7 +30,9 @@ void init() {
   msg_queue = msg_init(MSG_KEY);
   mem = shm_get(SHM_KEY);
   _game = mem->ptr;
-  find_me();
+  shm_read(mem);
+  me = get_pawn(_game, id);
+  shm_stop_read(mem);
 }
 
 void start() {

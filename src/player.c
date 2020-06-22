@@ -22,20 +22,6 @@ void on_exit() {
   wait_for_children();
 }
 
-void find_me() {
-  shm_read(mem);
-  for (int i = 0; i < _game->n_players && me == NULL; i++) {
-    player* p = _game->players[i];
-    if (p->id == id) {
-      me = p;
-    }
-  }
-  if (me == NULL) {
-    error("player %d not found\n", id);
-  }
-  shm_stop_read(mem);
-}
-
 void init() {
   pid = get_process_id();
   random_init();
@@ -45,14 +31,17 @@ void init() {
   msg_queue = msg_init(MSG_KEY);
   mem = shm_get(SHM_KEY);
   _game = mem->ptr;
-  find_me();
+  shm_read(mem);
+  me = get_player(_game, id);
+  shm_stop_read(mem);
 }
 
 void spawn_pawns() {
   shm_write(mem);
+  int first_id = get_player_first_pawn(_game, id);
   for (int i = 0; i < _game->n_pawns; i++) {
     debug_count();
-    pawn* p = me->pawns[i];
+    player* p = get_player(_game, i);
     char id_string[5];
     sprintf(id_string, "%d", p->id);
     char* args[] = {id_string, NULL};
