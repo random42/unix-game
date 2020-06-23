@@ -1,6 +1,8 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
+// effettua una nanosleep
+int nano_sleep(long ns);
 int get_process_id();
 int get_parent_process_id();
 int get_process_group_id();

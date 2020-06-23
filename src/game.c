@@ -184,15 +184,15 @@ void print_square(game* g, square* s) {
   // quindi si printa o F {punti della bandiera}
   // o P {id del player}
   if (s->has_flag) {
-    printf(" F %2d  ", s->flag_points);
+    printf(ANSI_COLOR_RED" %2d  "ANSI_COLOR_RESET, s->flag_points);
   }
   else if (s->pawn_id) {
     player* p = get_player(g, get_pawn(g, s->pawn_id)->player_id);
     // stampo l'id del player che controlla la pedina
-    printf(" P %2d  ", p->id);
+    printf(ANSI_COLOR_GREEN" %2d  "ANSI_COLOR_RESET, p->id);
   }
   else {
-    printf("   -   ");
+    printf(ANSI_COLOR_BLUE"  x  "ANSI_COLOR_RESET);
   }
 }
 
@@ -203,7 +203,7 @@ void print_game_state(game* g) {
   printf("\nSTATO DEL GIOCO\n\n");
   printf("     ");
   for (int j = 0; j < w; j++) {
-    printf("%4d   ", j);
+    printf("%3d  ", j);
   }
   printf("\n\n");
   for (int i = 0; i < h; i++) {

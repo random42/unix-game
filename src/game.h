@@ -4,7 +4,8 @@
 typedef enum Direction {UP = 0, DOWN = 1, RIGHT = 2, LEFT = 3} Direction; 
 
 typedef struct square {
-  int pawn_id; // se > 0 allora identifica l'id della pedina
+  // questo id vale 0 se non c'è una pedina, altrimenti è l'id della pedina
+  int pawn_id;
   int has_flag;
   int flag_points;
   int x;

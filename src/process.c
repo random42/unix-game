@@ -1,8 +1,18 @@
 #include <signal.h>
 #include <unistd.h>
+#include <time.h>
 #include "common.h"
 #include "debug.h"
 #include "process.h"
+
+int nano_sleep(long ns) {
+  // un secondo sono 1 miliardo di nanosecondi
+  long one_sec = 1e9;
+  struct timespec t;
+  t.tv_sec = ns / one_sec;
+  t.tv_nsec = ns % one_sec;
+  return nanosleep(&t, NULL);
+}
 
 int get_process_id() {
   return getpid();

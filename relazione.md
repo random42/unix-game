@@ -6,16 +6,8 @@ Una casella è "controllata" da una pedina se e solo se la
 distanza tra la pedina e la casella è minore o uguale alla distanza
 minima tra ogni altra pedina e la casella e la pedina ha abbastanza mosse per raggiungere la casella.
 
-## Posizionamento pedine
-
 Nella fase di posizionamento delle pedine, ogni giocatore posiziona
-la pedina nella casella da cui può controllare il maggior numero di caselle.
-In caso due o più caselle di posizionamento forniscano alla pedina lo stesso numero di caselle controllate, si cerca di minimizzare la somma delle distanze tra la pedina e ogni casella controllata.
-
-Questa strategia fa sì che ogni pedina venga posizionata al
-centro dell'area più libera della scacchiera.
-
-## Istruzioni del giocatore
+la pedina in una casella libera casuale.
 
 All'inizio del round ogni giocatore verifica per ogni bandiera
 le pedine che la controllano e per ogni sua pedina segna le
@@ -25,9 +17,7 @@ della pedina che controlla meno bandiere. Dopodiché a ogni pedina
 senza obiettivo assegna la bandiera controllata con punteggio
 maggiore che non è stata assegnata ad altre pedine.
 
-In questo modo ci si assicura che le bandiere controllate da un solo giocatore
-vengano sempre conquistate, mentre le bandiere contestate da più giocatori
-verranno valutate in base al punteggio.
+In questo modo ci si assicura che le bandiere controllate da un solo giocatore vengano sempre conquistate, mentre le bandiere contestate da più giocatori verranno valutate in base al punteggio.
 
 ## Mosse della pedina
 

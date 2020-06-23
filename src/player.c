@@ -56,12 +56,27 @@ void start() {
   placement_phase();
 }
 
+square* choose_placement_square() {
+  square* s = NULL;
+  // prendo la prima casella che non ha una pedina
+  while (s == NULL || s->pawn_id) {
+    int index = random_int_range(0, get_n_squares(_game) - 1);
+    s = get_square(_game, index);
+  }
+  return s;
+}
+
 void placement_phase() {
+  int first_pawn_id = get_player_first_pawn(_game, me->id)->id;
   for (int round = 0; round < _game->n_pawns; round++) {
     int value = (round * _game->n_players) + me->id;
     sem_op(game_sem, SEM_PLACEMENT, -value, TRUE);
-    printf("%d placing\n", me->id);
-    sleep(1);
+    // debug("Player %d is placing\n", me->id);
+    pawn* p = get_pawn(_game, first_pawn_id + round);
+    // debug("Pawn %d\n", p->id);
+    square* s = choose_placement_square();
+    place_pawn(p, s);
+    nano_sleep(100 * 1e6);
     sem_op(game_sem, SEM_PLACEMENT, value + 1, TRUE);
   }
 }

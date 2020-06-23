@@ -85,10 +85,13 @@ void init() {
 void start() {
   spawn_players();
   placement_phase();
+  // while (TRUE) {
+    play_round();
+  // }
 }
 
 void placement_phase() {
-  printf("Fase di posizionamento iniziata\n");
+  printf("Fase di posizionamento...\n");
   sem_op(game_sem, SEM_PLACEMENT, 1, TRUE);
   int end = (_game->n_pawns * _game->n_players) + 1;
   sem_op(game_sem, SEM_PLACEMENT, -end, TRUE);
@@ -96,11 +99,30 @@ void placement_phase() {
 }
 
 void play_round() {
-
+  int round = _game->rounds_played;
+  printf("Inizia il round numero %d\n", round);
+  place_flags();
+  print_game_state(_game);
 }
 
 void place_flags() {
-
+  int target_score = _game->round_score;
+  int score = 0;
+  while (score < target_score) {
+    // punteggio della bandiera casuale
+    int flag_points = random_int_range(_game->flag_min, _game->flag_max);
+    // se arrivo al limite del round score arrotondo il punteggio
+    flag_points = min(target_score - score, flag_points);
+    square* s = NULL;
+    // scelgo una casella libera da pedine e bandiere
+    while (s == NULL || s->pawn_id || s->has_flag) {
+      int index = random_int_range(0, get_n_squares(_game) - 1);
+      s = get_square(_game, index);
+    }
+    place_flag(s, flag_points);
+    score += flag_points;
+  }
+  assert(score == target_score);
 }
 
 void wait_players() {
