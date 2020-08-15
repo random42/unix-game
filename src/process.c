@@ -76,7 +76,7 @@ void set_signal_handler(int signal, void (*f)(int), int atomic) {
 void send_signal(int pid, int sig) {
   int r = kill(pid, sig);
   if (r == -1) {
-    error("send_sig\n");
+    error("send_signal\n");
   }
 }
 

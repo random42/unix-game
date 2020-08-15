@@ -46,6 +46,7 @@ void init_game() {
   int round_score = atoi(getenv("SO_ROUND_SCORE"));
   int max_pawn_moves = atoi(getenv("SO_N_MOVES"));
   int min_hold_nsec = atoi(getenv("SO_MIN_HOLD_NSEC"));
+  // TODO assert validity of config
   mem = shm_create(SHM_KEY, get_game_size(n_players, n_pawns, board_height, board_width));
   _game = create_game(mem->ptr, n_players, n_pawns, max_time, board_height, board_width, flag_min, flag_max, round_score, max_pawn_moves, min_hold_nsec);
 }
@@ -61,7 +62,6 @@ void spawn_players() {
     char* args[] = {id_string, NULL};
     int pid = fork_and_exec("./bin/player", args);
     p->pid = pid;
-    set_process_group_id(pid, get_process_group_id());
   }
   shm_stop_write(mem);
 }
@@ -80,6 +80,9 @@ void init() {
   // imposto l'id di questo processo come l'id del gruppo di processi
   // in modo da mandare facilmente segnali a tutti i sottoprocessi
   set_process_group_id(0, 0);
+  // ignora il segnale di fine gioco
+  // in quanto è mandato da questo processo
+  set_signal_handler(GAME_END_SIGNAL, SIG_IGN, TRUE);
 }
 
 void start() {
@@ -88,6 +91,7 @@ void start() {
   // while (TRUE) {
     play_round();
   // }
+  end_game();
 }
 
 void placement_phase() {
@@ -103,6 +107,17 @@ void play_round() {
   printf("Inizia il round numero %d\n", round);
   place_flags();
   print_game_state(_game);
+  sleep(2);
+  // fa iniziare il round
+  debug("ROUND_START\n");
+  // fa mandare le strategie dai giocatori
+  sem_op(game_sem, SEM_ROUND_START, -1, TRUE);
+  // attende che i giocatori inviino le strategie
+  sem_op(game_sem, SEM_ROUND_READY, 0, TRUE);
+  debug("PLAYERS_READY\n");
+  sleep(4);
+  debug("ROUND_END\n");
+  send_signal(0, ROUND_END_SIGNAL);
 }
 
 void place_flags() {
@@ -126,23 +141,25 @@ void place_flags() {
 }
 
 void wait_players() {
-
 }
 
 void wait_flag_captures() {
-
+  
 }
 
 void end_round() {
-
 }
 
 void end_game() {
-  
+  sleep(4);
+  debug("GAME_END\n");
+  send_signal(0, GAME_END_SIGNAL);
+  on_exit();
+  debug("EXITING\n");
+  exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char* argv[]) {
   init();
-  atexit(on_exit);
   start();
 }

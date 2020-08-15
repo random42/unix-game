@@ -24,7 +24,9 @@ void on_exit() {
 
 void init() {
   pid = get_process_id();
+  // inizializza la libreria random
   random_init();
+  // inizializza le strutture ipc
   debug_get(SEM_DEBUG_KEY);
   game_sem = sem_get(SEM_GAME_KEY);
   squares_sem = sem_get(SEM_SQUARES_KEY);
@@ -32,8 +34,14 @@ void init() {
   mem = shm_get(SHM_KEY);
   _game = mem->ptr;
   shm_read(mem);
+  // cerca il player a cui corrisponde
   me = get_player(_game, id);
   shm_stop_read(mem);
+  // ignora il segnale di bandiera catturata
+  set_signal_handler(FLAG_CAPTURED_SIGNAL, SIG_IGN, TRUE);
+  // imposta l'handler per terminare
+  // al segnale di fine del gioco
+  set_signal_handler(GAME_END_SIGNAL, term, TRUE);
 }
 
 void spawn_pawns() {
@@ -54,6 +62,10 @@ void spawn_pawns() {
 void start() {
   spawn_pawns();
   placement_phase();
+  play_round();
+  debug("WAIT GAME_END %d\n", me->id);
+  wait_signal(GAME_END_SIGNAL);
+  debug("P EXIT %d\n", me->id);
 }
 
 square* choose_placement_square() {
@@ -71,29 +83,41 @@ void placement_phase() {
   for (int round = 0; round < _game->n_pawns; round++) {
     int value = (round * _game->n_players) + me->id;
     sem_op(game_sem, SEM_PLACEMENT, -value, TRUE);
+    shm_read(mem);
     // debug("Player %d is placing\n", me->id);
     pawn* p = get_pawn(_game, first_pawn_id + round);
     // debug("Pawn %d\n", p->id);
     square* s = choose_placement_square();
+    shm_stop_read(mem);
+    shm_write(mem);
     place_pawn(p, s);
-    nano_sleep(100 * 1e6);
+    shm_stop_write(mem);
+    nano_sleep(500 * 1e6);
+    debug("%d placed\n", me->id);
     sem_op(game_sem, SEM_PLACEMENT, value + 1, TRUE);
   }
 }
 
+void send_strategies() {
+  
+}
+
 void play_round() {
-
+  // attende l'inizio del round
+  debug("WAIT ROUND_START %d\n", me->id);
+  sem_op(game_sem, SEM_ROUND_START, 0, TRUE);
+  sleep(1);
+  debug("READY %d\n", me->id);
+  // invia le strategie ai pedoni
+  send_strategies();
+  // decrementa il semaforo per segnalare che è pronto
+  sem_op(game_sem, SEM_ROUND_READY, -1, TRUE);
+  // attende la fine del round
+  debug("WAIT ROUND_END %d\n", me->id);
+  wait_signal(ROUND_END_SIGNAL);
 }
 
-square* create_strategy(pawn* pawn) {
-  return NULL;
-}
-
-void wait_round_end() {
-
-}
-
-void term() {
+void term(int sig) {
 
 }
 

@@ -11,7 +11,6 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <errno.h>
-#include <stdio.h>
 
 #define max(x,y) (x > y ? x : y)
 #define min(x,y) (x < y ? x : y)

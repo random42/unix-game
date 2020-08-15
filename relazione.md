@@ -2,9 +2,7 @@
 
 Si definisce la distanza tra due caselle come il minimo numero di mosse necessarie a una pedina per spostarsi da una all'altra, immaginando che non vi siano pedine nella scacchiera.
 
-Una casella è "controllata" da una pedina se e solo se la
-distanza tra la pedina e la casella è minore o uguale alla distanza
-minima tra ogni altra pedina e la casella e la pedina ha abbastanza mosse per raggiungere la casella.
+Una casella è "controllata" da una pedina se e solo se la distanza tra la pedina e la casella è minore o uguale alla distanza minima tra ogni altra pedina e la casella e la pedina ha abbastanza mosse per raggiungere la casella.
 
 Nella fase di posizionamento delle pedine, ogni giocatore posiziona
 la pedina in una casella libera casuale.
@@ -19,25 +17,15 @@ maggiore che non è stata assegnata ad altre pedine.
 
 In questo modo ci si assicura che le bandiere controllate da un solo giocatore vengano sempre conquistate, mentre le bandiere contestate da più giocatori verranno valutate in base al punteggio.
 
-## Mosse della pedina
-
-Ogni pedina riceve dal proprio giocatore le coordinate della bandiera
-che deve cercare di catturare, oppure le proprie coordinate nel caso
-non controlli bandiere. Il percorso più veloce verso una casella
-consente massimo due possibilità di direzione: nel caso di due direzioni
-disponibili la pedina cercherà di spostarsi possibilmente verso una
-casella libera. Il tentativo di spostamento richiederà l'accesso al semaforo
-in maniera bloccante. Non ci saranno mai casi di deadlock perché se
-due pedine dovessero "scontrarsi" e andare in direzioni opposte 
-ciò significa che non controllavano la casella in cui si dirigono.
+Ogni pedina riceve dal proprio giocatore le coordinate della bandiera che deve cercare di catturare, oppure le proprie coordinate nel caso non controlli bandiere. Il percorso più veloce verso una casella consente massimo due possibilità di direzione: nel caso di due direzioni disponibili la pedina cercherà di spostarsi possibilmente verso una casella libera. Il tentativo di spostamento richiederà l'accesso al semaforo in maniera bloccante. Non ci saranno mai casi di deadlock perché se due pedine dovessero "scontrarsi" e andare in direzioni opposte ciò significa che non controllavano la casella in cui si dirigono.
 
 # Flusso e sincronizzazione dei processi
 
-Il processo master inizialmente crea il gioco e ne salva i dati in memoria condivisa. Importa il proprio id di processo come id del suo gruppo di processi, che verrà ereditato da tutti i processi figli in modo da mandare facilmente segnali a tutti i processi del programma. Dopodiché crea i processi giocatori, i quali creano a sua volte i processi pedine, e inizia la fase di posizionamento delle pedine.
+Il processo master inizialmente crea il gioco e ne salva i dati in memoria condivisa. Imposta il proprio id di processo come id del suo gruppo di processi, che verrà ereditato da tutti i processi figli in modo da mandare facilmente segnali a tutti i processi del programma. Dopodiché crea i processi giocatori, i quali creano a sua volte i processi pedine, e inizia la fase di posizionamento delle pedine.
 
 ## Fase di posizionamento
 
-Questa fase è sincronizzata tramite il semaforo *SEM_PLACEMENT*. Inizialmente il semaforo ha valore 0. Per iniziare la fase di posizionamento il master imposta *SEM_PLACEMENT* a 1. Ogni giocatore è identificato da un numero *g* che va da 1 a *SO_NUM_G* a lui noto. Una variabile *placement_round* che va da 0 a *SO_NUM_P* identifica il round in cui ogni giocatore posiziona una pedina. Il round di posizionamento per un giocatore *g* è quindi definito da `r = (placement_round * SO_NUM_G) + g`.
+Questa fase è sincronizzata tramite il semaforo *SEM_PLACEMENT*. Inizialmente il semaforo ha valore 0. Per iniziare la fase di posizionamento il master imposta *SEM_PLACEMENT* a 1. Ogni giocatore è identificato da un numero *g* che va da 1 a *SO_NUM_G* a lui noto. Una variabile *placement_round* che va da 0 a *SO_NUM_P - 1* identifica il round in cui ogni giocatore posiziona una pedina. Il round di posizionamento per un giocatore *g* è quindi definito da `r = (placement_round * SO_NUM_G) + g`.
 
 Ogni giocatore effettua un'operazione sul semaforo pari a *-r*, posiziona la pedina scrivendo nella memoria condivisa (il cui accesso è sincronizzato) e aumenta il semaforo di *r+1*. Il master aspetta il termine di questa fase effettuando un'operazione sul semaforo pari a `-((SO_NUM_G * SO_NUM_P) + 1)`.
 

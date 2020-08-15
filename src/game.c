@@ -38,6 +38,7 @@ player* get_player(game* g, int id) {
   return &get_first_player(g)[id - 1];
 }
 
+// x e y partono da 0
 int get_square_index(game* g, int x, int y) {
   // l'indice della casella è il numero della riga 
   // per il numero di righe più il numero della colonna
@@ -119,31 +120,24 @@ int squares_distance(square* s1, square* s2) {
   return abs(s1->x - s2->x) + abs(s1->y - s2->y);
 }
 
-int square_controls(game* g, square* from, square* target) {
-  // distanza tra le due caselle
-  int distance = squares_distance(from, target);
+square* nearest_flag_from_square(game* g, square* from) {
+  int distance = INT_MAX;
+  square* target = NULL;
   for (int i = 0; i < get_n_squares(g); i++) {
     square* s = get_square(g, i);
-    int d = squares_distance(s, target);
-    if (s->pawn_id) {
-      // se c'e' un pedone e la distanza tra "s" e "target"
-      // è minore della distanza tra "from" e "target"
-      // allora "from" non controlla la casella
-      if (d < distance) {
-        return FALSE;
-      }
+    int d = squares_distance(from, s);
+    if (d < distance && s->has_flag) {
+      target = s;
+      distance = d;
     }
   }
-  return TRUE;
+  return target;
 }
 
-int pawn_controls(game* g, pawn* pawn, square* target) {
-  square* from = get_pawn_square(g, pawn);
-  // controllo che il pedone abbia le mosse necessarie per arrivare
-  // alla casella "target"
-  return pawn->moves_left >= squares_distance(from, target) 
-    && square_controls(g, from, target);
+square* nearest_flag(game* g, pawn* p) {
+  return nearest_flag_from_square(g, get_square_in(g, p->x, p->y));
 }
+
 
 void place_flag(square* square, int points) {
   square->flag_points = points;
@@ -168,7 +162,7 @@ void move_pawn(game* g, pawn* pawn, square* to) {
 void remove_captured_flags(game* g) {
   for (int i = 0; i < get_n_squares(g); i++) {
     square* s = get_square(g, i);
-    if (s->has_flag && s->pawn_id) {
+    if (s->has_flag && s->pawn_id) { // se non e' 0 'pawn_id' vuol dire che c'e' un pedone
       s->has_flag = FALSE;
       pawn* p = get_pawn(g, s->pawn_id);
       player* pl = get_player(g, p->player_id);

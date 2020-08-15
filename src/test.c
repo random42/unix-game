@@ -52,17 +52,7 @@ void test_game() {
   place_flag(s4, flag_points);
   print_game_state(g);
   assert(squares_distance(s1, s3) == 6);
-  assert(square_controls(g, s1, get_square_in(g, 1, 1)));
-  assert(square_controls(g, s2, get_square_in(g, 1, 1)));
-  assert(square_controls(g, s1, get_square_in(g, 2, 2)));
-  assert(square_controls(g, s2, get_square_in(g, 2, 2)));
-  assert(square_controls(g, s2, get_square_in(g, 2, 1)));
-  assert(!square_controls(g, s1, get_square_in(g, 2, 1)));
-  assert(pawn_controls(g, p1, get_square_in(g, 1, 1)));
-  assert(pawn_controls(g, p1, get_pawn_square(g, p1)));
   p1->moves_left = 0;
-  assert(pawn_controls(g, p1, get_pawn_square(g, p1)));
-  assert(!pawn_controls(g, p1, get_square_in(g, 1, 1)));
   p1->moves_left = 2;
   print_game_state(g);
   move_pawn(g, p1, get_square_in(g, 0, 1));
