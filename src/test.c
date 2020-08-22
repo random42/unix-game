@@ -68,11 +68,9 @@ void test_game() {
 
 int main() {
   debug_create(SEM_DEBUG_KEY);
-  printf("sizeof game %d\n", sizeof(game));
-  printf("sizeof player %d\n", sizeof(player));
-  printf("sizeof square %d\n", sizeof(square));
-  printf("sizeof pawn %d\n", sizeof(pawn));
-  test_game();
+  int a = 4;
+  int x[a];
+  x[4] = 10;
   // void* x = 0;
   // void* y = x + sizeof(game);
   // printf("x %d, y %d, diff %d\n", x, y, y-x);

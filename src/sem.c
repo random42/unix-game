@@ -9,9 +9,7 @@
 int sem_get(int key) {
   int id = semget(key, 0, 0);
   if (id == -1) {
-    printf("sem_get\n");
-    print_error;
-    exit(EXIT_FAILURE);
+    error("sem_get\n");
   }
   return id;
 }
@@ -19,9 +17,7 @@ int sem_get(int key) {
 int sem_create(int key, int n_sems) {
   int id = semget(key, n_sems, 0600 | IPC_CREAT);
   if (id == -1) {
-    printf("sem_create\n");
-    print_error;
-    exit(EXIT_FAILURE);
+    error("sem_create\n");
   }
   return id;
 }
@@ -29,9 +25,7 @@ int sem_create(int key, int n_sems) {
 void sem_delete(int sem_id) {
   int r = semctl(sem_id, 0, IPC_RMID);
   if (r == -1) {
-    printf("sem_delete\n");
-    print_error;
-    exit(EXIT_FAILURE);
+    error("sem_delete\n");
   }
 }
 
@@ -42,9 +36,7 @@ int sem_op(int sem_id, int sem_num, short op, int wait) {
   s.sem_flg = wait ? 0 : IPC_NOWAIT;
   int r = semop(sem_id, &s, 1);
   if (r == -1 && errno != EAGAIN) {
-    printf("sem_op\n");
-    print_error;
-    exit(EXIT_FAILURE);
+    error("sem_op\n");
   }
   return r;
 }
@@ -52,18 +44,14 @@ int sem_op(int sem_id, int sem_num, short op, int wait) {
 void sem_set(int sem_id, int sem_num, int val) {
   int r = semctl(sem_id, sem_num, SETVAL, val);
   if (r == -1) {
-    printf("sem_set\n");
-    print_error;
-    exit(EXIT_FAILURE);
+    error("sem_set\n");
   }
 }
 
 int sem_get_value(int sem_id, int sem_num) {
   int r = semctl(sem_id, sem_num, GETVAL);
   if (r == -1) {
-    printf("sem_set\n");
-    print_error;
-    exit(EXIT_FAILURE);
+    error("sem_get_value\n");
   }
   return r;
 }

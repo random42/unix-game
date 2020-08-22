@@ -68,12 +68,21 @@ square* get_square(game* g, int i);
 square* get_square_in(game* g, int x, int y);
 pawn* get_player_first_pawn(game* g, int player_id);
 square* get_pawn_square(game* g, pawn* p);
+int has_pawn(square* s);
+int has_flag(square* s);
 // byte necessari per allocare il gioco
 int get_game_size(int n_players, int n_pawns, int board_height, int board_width);
 // inizializza il gioco nella memoria del puntatore
 game* create_game(void* ptr, int n_players, int n_pawns, int max_time, int board_height, int board_width, int flag_min, int flag_max, int round_score, int max_pawn_moves, int min_hold_nsec);
 // distanza minima (in mosse) tra due caselle
 int squares_distance(square* s1, square* s2);
+// ritorna TRUE se il pedone controlla la casella
+int pawn_controls_square(game* g, pawn* p, square* target);
+// ritorna TRUE se il pedone controlla almeno una bandiera
+int pawn_controls_any_flag(game* g, pawn* p);
+// scrive sul puntatore le caselle con bandiera controllate dal pedone
+// e ne ritorna il numero
+int get_controlled_flags(game* g, pawn* p, square** ptr);
 // ritorna la casella con una bandiera più vicina
 // NULL se non ci sono bandiere
 square* nearest_flag_from_square(game* g, square* from);

@@ -70,24 +70,28 @@ void init() {
   random_init();
   debug_create(SEM_DEBUG_KEY);
   init_game();
-  game_sem = sem_create(SEM_GAME_KEY, 3);
+  game_sem = sem_create(SEM_GAME_KEY, SEM_GAME_N);
   // imposto i semafori ai valori iniziali
   sem_set(game_sem, SEM_PLACEMENT, 0);
   sem_set(game_sem, SEM_ROUND_READY, _game->n_players);
   sem_set(game_sem, SEM_ROUND_START, 1);
   squares_sem = sem_create(SEM_SQUARES_KEY, get_n_squares(_game));
   msg_queue = msg_init(MSG_KEY);
-  // imposto l'id di questo processo come l'id del gruppo di processi
-  // in modo da mandare facilmente segnali a tutti i sottoprocessi
+  // imposto l'id di questo processo come id del gruppo di processi
+  // in modo da mandare facilmente segnali a tutti i processi figli
   set_process_group_id(0, 0);
-  // ignora il segnale di fine gioco
-  // in quanto è mandato da questo processo
+  // ignora il segnale di fine gioco e di fine round
+  // in quanto sono mandati da questo processo
   set_signal_handler(GAME_END_SIGNAL, SIG_IGN, TRUE);
+  set_signal_handler(ROUND_END_SIGNAL, SIG_IGN, TRUE);
 }
 
 void start() {
+  debug("MASTER\n");
   spawn_players();
   placement_phase();
+  // set game start time
+  gettimeofday(&_game->start_time, NULL);
   // while (TRUE) {
     play_round();
   // }
@@ -112,11 +116,16 @@ void play_round() {
   debug("ROUND_START\n");
   // fa mandare le strategie dai giocatori
   sem_op(game_sem, SEM_ROUND_START, -1, TRUE);
+  // reimposta il semaforo
+  debug("ROUND_STARTED\n");
   // attende che i giocatori inviino le strategie
   sem_op(game_sem, SEM_ROUND_READY, 0, TRUE);
+  // reimposta il semaforo
   debug("PLAYERS_READY\n");
   sleep(4);
   debug("ROUND_END\n");
+  sem_op(game_sem, SEM_ROUND_START, 1, TRUE);
+  sem_set(game_sem, SEM_ROUND_READY, _game->n_players);
   send_signal(0, ROUND_END_SIGNAL);
 }
 
@@ -130,7 +139,7 @@ void place_flags() {
     flag_points = min(target_score - score, flag_points);
     square* s = NULL;
     // scelgo una casella libera da pedine e bandiere
-    while (s == NULL || s->pawn_id || s->has_flag) {
+    while (s == NULL || has_pawn(s) || has_flag(s)) {
       int index = random_int_range(0, get_n_squares(_game) - 1);
       s = get_square(_game, index);
     }
@@ -155,7 +164,7 @@ void end_game() {
   debug("GAME_END\n");
   send_signal(0, GAME_END_SIGNAL);
   on_exit();
-  debug("EXITING\n");
+  print_game_stats(_game);
   exit(EXIT_SUCCESS);
 }
 

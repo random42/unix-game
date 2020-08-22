@@ -18,6 +18,10 @@ int msg_queue;
 int id;
 int pid;
 
+void sig_handler(int sig) {
+  debug("SIGNAL: %d\n", sig);
+}
+
 void on_exit() {
   wait_for_children();
 }
@@ -42,6 +46,8 @@ void init() {
   // imposta l'handler per terminare
   // al segnale di fine del gioco
   set_signal_handler(GAME_END_SIGNAL, term, TRUE);
+  // se non imposto un handler non posso usare la wait_signal
+  set_signal_handler(ROUND_END_SIGNAL, sig_handler, TRUE);
 }
 
 void spawn_pawns() {
@@ -60,12 +66,14 @@ void spawn_pawns() {
 }
 
 void start() {
+  debug("PLAYER_START\n");
+  debug("player_ppid: %d\n", get_process_group_id());
   spawn_pawns();
   placement_phase();
   play_round();
-  debug("WAIT GAME_END %d\n", me->id);
+  debug("WAIT_GAME_END\n");
   wait_signal(GAME_END_SIGNAL);
-  debug("P EXIT %d\n", me->id);
+  term(GAME_END_SIGNAL);
 }
 
 square* choose_placement_square() {
@@ -104,21 +112,23 @@ void send_strategies() {
 
 void play_round() {
   // attende l'inizio del round
-  debug("WAIT ROUND_START %d\n", me->id);
   sem_op(game_sem, SEM_ROUND_START, 0, TRUE);
+  debug("PLAYER_START_ROUND\n");
   sleep(1);
-  debug("READY %d\n", me->id);
   // invia le strategie ai pedoni
   send_strategies();
+  debug("PLAYER_READY\n");
   // decrementa il semaforo per segnalare che è pronto
   sem_op(game_sem, SEM_ROUND_READY, -1, TRUE);
   // attende la fine del round
-  debug("WAIT ROUND_END %d\n", me->id);
+  debug("WAIT_ROUND_END\n");
   wait_signal(ROUND_END_SIGNAL);
 }
 
 void term(int sig) {
-
+  wait_for_children();
+  debug("PLAYER_EXIT\n");
+  exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char* argv[]) {

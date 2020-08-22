@@ -18,6 +18,10 @@ int msg_queue;
 int id;
 int pid;
 
+void sig_handler(int sig) {
+  debug("SIGNAL: %d\n", sig);
+}
+
 void init() {
   pid = get_process_id();
   random_init();
@@ -36,12 +40,15 @@ void init() {
   // imposta l'handler per terminare
   // al segnale di fine del gioco
   set_signal_handler(GAME_END_SIGNAL, term, TRUE);
+  set_signal_handler(ROUND_END_SIGNAL, sig_handler, TRUE);
 }
 
 void start() {
+  debug("pawn_ppid: %d\n", get_process_group_id());
+  debug("PAWN_START\n");
   // attende la fine del gioco
   wait_signal(GAME_END_SIGNAL);
-  debug("Y EXIT %d\n", me->id);
+  term(GAME_END_SIGNAL);
 }
 
 void play_round() {
@@ -68,8 +75,9 @@ void wait_round_end() {
 
 }
 
-void term() {
-
+void term(int sig) {
+  debug("PAWN_EXIT\n");
+  exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char* argv[]) {

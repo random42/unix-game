@@ -12,6 +12,7 @@
 #define max(x,y) (x > y ? x : y)
 #define min(x,y) (x < y ? x : y)
 #define print_error printf("%s\n",strerror(errno))
+#define error(x, ...) printf("\n[%d] ERROR: ", getpid());printf(x, ##__VA_ARGS__);print_error;exit(EXIT_FAILURE);
 
 #define TRUE 1
 #define FALSE 0

@@ -65,6 +65,14 @@ square* get_pawn_square(game* g, pawn* p) {
   return get_square(g, get_square_index(g, p->x, p->y));
 }
 
+int has_pawn(square* s) {
+  return !!s->pawn_id;
+}
+
+int has_flag(square* s) {
+  return s->has_flag;
+}
+
 int get_game_size(int n_players, int n_pawns, int board_height, int board_width) {
   return sizeof(game) + 
     (sizeof(square) * board_height * board_width) +
@@ -118,6 +126,44 @@ game* create_game(void* ptr, int n_players, int n_pawns, int max_time, int board
 
 int squares_distance(square* s1, square* s2) {
   return abs(s1->x - s2->x) + abs(s1->y - s2->y);
+}
+
+int pawn_controls_square(game* g, pawn* p, square* target) {
+  square* from = get_pawn_square(g, p);
+  int distance = squares_distance(from, target);
+  int controls = TRUE;
+  for (int i = 0; i < get_n_squares(g) && controls; i++) {
+    square* s = get_square(g, i);
+    if (s != from && has_pawn(s) && squares_distance(s, target) < distance) {
+      controls = FALSE;
+    }
+  }
+  return controls;
+}
+
+int pawn_controls_any_flag(game* g, pawn* p) {
+  square* from = get_pawn_square(g, p);
+  int controls = FALSE;
+  for (int i = 0; i < get_n_squares(g) && !controls; i++) {
+    square* s = get_square(g, i);
+    if (has_flag(s) && pawn_controls_square(g, p, s)) {
+      controls = TRUE;
+    }
+  }
+  return controls;
+}
+
+int get_controlled_flags(game* g, pawn* p, square** ptr) {
+  square* from = get_pawn_square(g, p);
+  int controls = FALSE;
+  int count = 0;
+  for (int i = 0; i < get_n_squares(g); i++) {
+    square* s = get_square(g, i);
+    if (has_flag(s) && pawn_controls_square(g, p, s)) {
+      ptr[count++] = s;
+    }
+  }
+  return count;
 }
 
 square* nearest_flag_from_square(game* g, square* from) {
