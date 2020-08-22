@@ -44,19 +44,24 @@ void init() {
 }
 
 void start() {
-  debug("pawn_ppid: %d\n", get_process_group_id());
+  // debug("pawn_ppid: %d\n", get_process_group_id());
   debug("PAWN_START\n");
+  play_round();
   // attende la fine del gioco
   wait_signal(GAME_END_SIGNAL);
   term(GAME_END_SIGNAL);
 }
 
 void play_round() {
-
-}
-
-square* get_target() {
-
+  message msg;
+  msg_receive(msg_queue, &msg, TRUE);
+  debug("MSG: %d\n", msg.move);
+  sem_op(game_sem, SEM_ROUND_READY, 0, TRUE);
+  if (msg.move) {
+    play();
+  } else {
+    wait_signal(ROUND_END_SIGNAL);
+  }
 }
 
 void play() {

@@ -67,7 +67,7 @@ void spawn_pawns() {
 
 void start() {
   debug("PLAYER_START\n");
-  debug("player_ppid: %d\n", get_process_group_id());
+  // debug("player_ppid: %d\n", get_process_group_id());
   spawn_pawns();
   placement_phase();
   play_round();
@@ -107,14 +107,23 @@ void placement_phase() {
 }
 
 void send_strategies() {
-  
+  shm_read(mem);
+  int pawn_id = get_player_first_pawn(_game, id)->id;
+  for (int i = 0; i < _game->n_pawns; i++) {
+    pawn* p = get_pawn(_game, pawn_id++);
+    message msg;
+    msg.mtype = p->pid;
+    msg.move = pawn_controls_any_flag(_game, p);
+    msg_send(msg_queue, &msg, TRUE);
+  }
+  shm_stop_read(mem);
 }
 
 void play_round() {
   // attende l'inizio del round
   sem_op(game_sem, SEM_ROUND_START, 0, TRUE);
   debug("PLAYER_START_ROUND\n");
-  sleep(1);
+  // sleep(1);
   // invia le strategie ai pedoni
   send_strategies();
   debug("PLAYER_READY\n");

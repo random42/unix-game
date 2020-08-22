@@ -4,9 +4,8 @@
 typedef struct message {
   // pid of receiver
   long mtype;
-  // target square
-  int x;
-  int y;
+  // tells pawn if has to move
+  int move;
 } message;
 
 int msg_init(int key);

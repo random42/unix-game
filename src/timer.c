@@ -5,12 +5,12 @@
 #include "timer.h"
 #include "process.h"
 
-void set_timeout(void (*handler)(int), int sec, int micros, int atomic) {
+void set_timeout(void (*handler)(int), int sec, int microsec, int atomic) {
   set_signal_handler(SIGALRM, handler, atomic);
   struct itimerval timer;
   // setta il prossimo scattare del timer
   timer.it_value.tv_sec = sec;
-  timer.it_value.tv_usec = micros;
+  timer.it_value.tv_usec = microsec;
   // questi sono per dire se bisogna ripetere il timer
   timer.it_interval.tv_sec = 0;
   timer.it_interval.tv_usec = 0;
