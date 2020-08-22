@@ -1,9 +1,6 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#define TRUE 1
-#define FALSE 0
-
 #include <string.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -15,6 +12,9 @@
 #define max(x,y) (x > y ? x : y)
 #define min(x,y) (x < y ? x : y)
 #define print_error printf("%s\n",strerror(errno))
+
+#define TRUE 1
+#define FALSE 0
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
