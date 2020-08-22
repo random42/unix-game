@@ -76,6 +76,10 @@ int get_game_size(int n_players, int n_pawns, int board_height, int board_width)
 game* create_game(void* ptr, int n_players, int n_pawns, int max_time, int board_height, int board_width, int flag_min, int flag_max, int round_score, int max_pawn_moves, int min_hold_nsec);
 // distanza minima (in mosse) tra due caselle
 int squares_distance(square* s1, square* s2);
+// ritorna la distanza tra una casella e il centro della scacchiera
+// si usa un numero decimale per i casi in cui l'altezza o la larghezza
+// siano numeri pari e non esiste quindi una casella centrale
+double distance_from_center(game* g, square* s);
 // ritorna TRUE se il pedone controlla la casella
 int pawn_controls_square(game* g, pawn* p, square* target);
 // ritorna TRUE se il pedone controlla almeno una bandiera
@@ -83,10 +87,10 @@ int pawn_controls_any_flag(game* g, pawn* p);
 // scrive sul puntatore le caselle con bandiera controllate dal pedone
 // e ne ritorna il numero
 int get_controlled_flags(game* g, pawn* p, square** ptr);
-// ritorna la casella con una bandiera più vicina
-// NULL se non ci sono bandiere
-square* nearest_flag_from_square(game* g, square* from);
-square* nearest_flag(game* g, pawn* p);
+// ritorna la casella con bandiera controllata dal pedone
+// che è più distante dal centro della scacchiera
+// NULL se il pedone non controlla bandiere
+square* furthest_controlled_flag_from_center(game* g, pawn* p);
 // posiziona una bandiera nella casella
 void place_flag(square* square, int points);
 // posiziona la pedina nella casella

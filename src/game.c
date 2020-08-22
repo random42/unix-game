@@ -1,4 +1,5 @@
 #include <sys/time.h>
+#include <math.h>
 #include "common.h"
 #include "game.h"
 
@@ -128,6 +129,12 @@ int squares_distance(square* s1, square* s2) {
   return abs(s1->x - s2->x) + abs(s1->y - s2->y);
 }
 
+double distance_from_center(game* g, square* s) {
+  double x = g->board_width - 1;
+  double y = g->board_height - 1;
+  return fabs(x/2 - s->x) + fabs(y/2 - s->y);
+}
+
 int pawn_controls_square(game* g, pawn* p, square* target) {
   square* from = get_pawn_square(g, p);
   int distance = squares_distance(from, target);
@@ -153,6 +160,7 @@ int pawn_controls_any_flag(game* g, pawn* p) {
   return controls;
 }
 
+// TODO remove if possibile
 int get_controlled_flags(game* g, pawn* p, square** ptr) {
   square* from = get_pawn_square(g, p);
   int controls = FALSE;
@@ -166,24 +174,20 @@ int get_controlled_flags(game* g, pawn* p, square** ptr) {
   return count;
 }
 
-square* nearest_flag_from_square(game* g, square* from) {
-  int distance = INT_MAX;
+square* furthest_controlled_flag_from_center(game* g, pawn* p) {
+  square* from = get_pawn_square(g, p);
   square* target = NULL;
+  double max_distance = -1;
   for (int i = 0; i < get_n_squares(g); i++) {
     square* s = get_square(g, i);
-    int d = squares_distance(from, s);
-    if (d < distance && s->has_flag) {
+    double distance = distance_from_center(g, s);
+    if (has_flag(s) && pawn_controls_square(g, p, s) && distance > max_distance) {
+      max_distance = distance;
       target = s;
-      distance = d;
     }
   }
   return target;
 }
-
-square* nearest_flag(game* g, pawn* p) {
-  return nearest_flag_from_square(g, get_square_in(g, p->x, p->y));
-}
-
 
 void place_flag(square* square, int points) {
   square->flag_points = points;
