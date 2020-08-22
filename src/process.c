@@ -88,6 +88,6 @@ void wait_signal(int sig) {
   sigaddset(&set, sig);
   int r = sigwait(&set, NULL);
   if (r == -1) {
-    error("wait_sig\n");
+    error("sigwait\n");
   }
 }

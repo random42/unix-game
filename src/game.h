@@ -69,6 +69,7 @@ square* get_square_in(game* g, int x, int y);
 pawn* get_player_first_pawn(game* g, int player_id);
 square* get_pawn_square(game* g, pawn* p);
 int has_pawn(square* s);
+// ritorna TRUE se la casella ha una bandiera e non ha un pedone
 int has_flag(square* s);
 // byte necessari per allocare il gioco
 int get_game_size(int n_players, int n_pawns, int board_height, int board_width);

@@ -8,8 +8,9 @@ void start();
 void play_round();
 square* get_target();
 void play();
-Direction choose_direction(square* target);
-void move(square* square);
+square* choose_next_square(square* target);
+void move_towards(square* target);
+void move_to(square* s);
 void wait_round_end();
 void term();
 

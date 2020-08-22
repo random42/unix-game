@@ -71,7 +71,7 @@ int has_pawn(square* s) {
 }
 
 int has_flag(square* s) {
-  return s->has_flag;
+  return s->has_flag && !has_pawn(s);
 }
 
 int get_game_size(int n_players, int n_pawns, int board_height, int board_width) {
@@ -138,7 +138,9 @@ double distance_from_center(game* g, square* s) {
 int pawn_controls_square(game* g, pawn* p, square* target) {
   square* from = get_pawn_square(g, p);
   int distance = squares_distance(from, target);
-  int controls = TRUE;
+  // se il pedone non ha abbastanza mosse per arrivare alla casella
+  // allora non puo' controllarla a prescindere
+  int controls = p->moves_left >= distance;
   for (int i = 0; i < get_n_squares(g) && controls; i++) {
     square* s = get_square(g, i);
     if (s != from && has_pawn(s) && squares_distance(s, target) < distance) {
@@ -201,7 +203,9 @@ void place_pawn(pawn* pawn, square* square) {
 }
 
 void move_pawn(game* g, pawn* pawn, square* to) {
+  assert(pawn->moves_left > 0);
   square* from = get_pawn_square(g, pawn);
+  assert(squares_distance(from, to) == 1);
   from->pawn_id = 0;
   to->pawn_id = pawn->id;
   pawn->x = to->x;
@@ -227,10 +231,10 @@ void print_square(game* g, square* s) {
   // nei momenti in cui si printa lo stato
   // quindi si printa o F {punti della bandiera}
   // o P {id del player}
-  if (s->has_flag) {
+  if (has_flag(s)) {
     printf(ANSI_COLOR_RED" %2d  "ANSI_COLOR_RESET, s->flag_points);
   }
-  else if (s->pawn_id) {
+  else if (has_pawn(s)) {
     player* p = get_player(g, get_pawn(g, s->pawn_id)->player_id);
     // stampo l'id del player che controlla la pedina
     printf(ANSI_COLOR_GREEN" %2d  "ANSI_COLOR_RESET, p->id);

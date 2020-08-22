@@ -6,7 +6,8 @@ void init();
 void start();
 void placement_phase();
 void play_round();
-void place_flags();
+// piazza le bandiere e ritorna il numero di bandiere
+int place_flags();
 void wait_players();
 void wait_flag_captures();
 void end_round();

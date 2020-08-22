@@ -17,9 +17,9 @@ void debug_get(int key) {
 
 void debug_count() {
   if (DEBUG) {
-    P;
+    debug_p();
     printf("[%d] count %d\n", getpid(), count++);
-    V;
+    debug_v();
   }
 }
 

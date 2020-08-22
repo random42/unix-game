@@ -10,6 +10,7 @@
 #include "process.h"
 #include "msg.h"
 #include "sem.h"
+#include "game.h"
 #include "master.h"
 
 // non posso utilizzare "game"
@@ -75,7 +76,11 @@ void init() {
   sem_set(game_sem, SEM_PLACEMENT, 0);
   sem_set(game_sem, SEM_ROUND_READY, _game->n_players);
   sem_set(game_sem, SEM_ROUND_START, 1);
-  squares_sem = sem_create(SEM_SQUARES_KEY, get_n_squares(_game));
+  int n_squares = get_n_squares(_game);
+  squares_sem = sem_create(SEM_SQUARES_KEY, n_squares);
+  for (int i = 0; i < n_squares; i++) {
+    sem_set(squares_sem, i, 1);
+  }
   msg_queue = msg_init(MSG_KEY);
   // imposto l'id di questo processo come id del gruppo di processi
   // in modo da mandare facilmente segnali a tutti i processi figli
@@ -107,11 +112,10 @@ void placement_phase() {
 }
 
 void play_round() {
-  int round = _game->rounds_played;
+  int round = _game->rounds_played++;
   printf("Inizia il round numero %d\n", round);
-  place_flags();
+  int flags = place_flags();
   print_game_state(_game);
-  sleep(2);
   // fa iniziare il round
   debug("ROUND_START\n");
   // fa mandare le strategie dai giocatori
@@ -120,18 +124,25 @@ void play_round() {
   debug("ROUND_STARTED\n");
   // attende che i giocatori inviino le strategie
   sem_op(game_sem, SEM_ROUND_READY, 0, TRUE);
-  // reimposta il semaforo
   debug("PLAYERS_READY\n");
-  sleep(4);
+  // attende i messaggio di cattura delle bandiere
+  for (int i = 0; i < flags; i++) {
+    message msg;
+    msg_receive(msg_queue, &msg, TRUE);
+    debug("FLAG_CAPTURED: %d/%d\n", i+1, flags);
+    remove_captured_flags(_game);
+  }
   debug("ROUND_END\n");
+  // reimposta i semafori ai valori iniziali
   sem_op(game_sem, SEM_ROUND_START, 1, TRUE);
   sem_set(game_sem, SEM_ROUND_READY, _game->n_players);
   send_signal(0, ROUND_END_SIGNAL);
 }
 
-void place_flags() {
+int place_flags() {
   int target_score = _game->round_score;
   int score = 0;
+  int flags = 0;
   while (score < target_score) {
     // punteggio della bandiera casuale
     int flag_points = random_int_range(_game->flag_min, _game->flag_max);
@@ -145,22 +156,16 @@ void place_flags() {
     }
     place_flag(s, flag_points);
     score += flag_points;
+    flags++;
   }
   assert(score == target_score);
-}
-
-void wait_players() {
-}
-
-void wait_flag_captures() {
-  
+  return flags;
 }
 
 void end_round() {
 }
 
 void end_game() {
-  sleep(4);
   debug("GAME_END\n");
   send_signal(0, GAME_END_SIGNAL);
   on_exit();

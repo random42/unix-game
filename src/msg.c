@@ -30,14 +30,7 @@ void msg_send(int id, message* m, int wait) {
 int msg_receive(int id, message* buffer, int wait) {
   int flag = wait ? 0 : IPC_NOWAIT;
   int r = msgrcv(id, buffer, msg_size, getpid(), flag);
-  if (r == -1) {
-    if (!wait && errno == ENOMSG)
-      return -1;
-    else {
-      error("msgrcv\n");
-    }
-  }
-  return 0;
+  return r;
 }
 
 void msg_close(int id) {

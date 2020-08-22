@@ -41,8 +41,6 @@ void init() {
   // cerca il player a cui corrisponde
   me = get_player(_game, id);
   shm_stop_read(mem);
-  // ignora il segnale di bandiera catturata
-  set_signal_handler(FLAG_CAPTURED_SIGNAL, SIG_IGN, TRUE);
   // imposta l'handler per terminare
   // al segnale di fine del gioco
   set_signal_handler(GAME_END_SIGNAL, term, TRUE);
@@ -70,10 +68,9 @@ void start() {
   // debug("player_ppid: %d\n", get_process_group_id());
   spawn_pawns();
   placement_phase();
-  play_round();
-  debug("WAIT_GAME_END\n");
-  wait_signal(GAME_END_SIGNAL);
-  term(GAME_END_SIGNAL);
+  while (TRUE) {
+    play_round();
+  }
 }
 
 square* choose_placement_square() {
@@ -91,6 +88,7 @@ void placement_phase() {
   for (int round = 0; round < _game->n_pawns; round++) {
     int value = (round * _game->n_players) + me->id;
     sem_op(game_sem, SEM_PLACEMENT, -value, TRUE);
+    debug("PLACEMENT_TURN: %d\n", value);
     shm_read(mem);
     // debug("Player %d is placing\n", me->id);
     pawn* p = get_pawn(_game, first_pawn_id + round);
@@ -98,10 +96,11 @@ void placement_phase() {
     square* s = choose_placement_square();
     shm_stop_read(mem);
     shm_write(mem);
+    // piazza il pedone
     place_pawn(p, s);
+    // acquisisce il lock della casella per indicare che è occupata
+    sem_op(squares_sem, get_square_index(_game, s->x, s->y), -1, TRUE);
     shm_stop_write(mem);
-    nano_sleep(500 * 1e6);
-    debug("%d placed\n", me->id);
     sem_op(game_sem, SEM_PLACEMENT, value + 1, TRUE);
   }
 }
@@ -130,7 +129,7 @@ void play_round() {
   // decrementa il semaforo per segnalare che è pronto
   sem_op(game_sem, SEM_ROUND_READY, -1, TRUE);
   // attende la fine del round
-  debug("WAIT_ROUND_END\n");
+  debug("PLAYER_WAIT_ROUND_END\n");
   wait_signal(ROUND_END_SIGNAL);
 }
 

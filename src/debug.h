@@ -11,9 +11,7 @@
 
 #define DEBUG 1
 
-#define P debug_p()
-#define V debug_v()
-#define debug(x, ...) if (DEBUG) {P;printf("[%d] ", getpid());printf(x, ##__VA_ARGS__);V;}
+#define debug(x, ...) if (DEBUG) {debug_p();printf("[%d] ", getpid());printf(x, ##__VA_ARGS__);debug_v();}
 
 void debug_create(int key);
 void debug_get(int key);
