@@ -1,4 +1,4 @@
-/bin
-/build
-/stuff
+bin
+build
+stuff
 .env

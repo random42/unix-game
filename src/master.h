@@ -8,9 +8,7 @@ void placement_phase();
 void play_round();
 // piazza le bandiere e ritorna il numero di bandiere
 int place_flags();
-void wait_players();
-void wait_flag_captures();
-void end_round();
-void end_game();
+void wait_flag_captures(int flags);
+void term();
 
 #endif

@@ -40,6 +40,8 @@ void init() {
   // imposta l'handler per terminare
   // al segnale di fine del gioco
   set_signal_handler(GAME_END_SIGNAL, term, TRUE);
+  set_signal_handler(SIGINT, term, TRUE);
+  set_signal_handler(SIGABRT, term, TRUE);
   // se non imposto un handler non posso usare la wait_signal
   set_signal_handler(ROUND_END_SIGNAL, sig_handler, TRUE);
 }
@@ -126,12 +128,13 @@ void play_round() {
   sem_op(game_sem, SEM_ROUND_READY, -1, TRUE);
   // attende la fine del round
   debug("PLAYER_WAIT_ROUND_END\n");
-  wait_signal(ROUND_END_SIGNAL);
+  infinite_sleep();
+  // wait_signal(ROUND_END_SIGNAL);
 }
 
 void term(int sig) {
-  wait_for_children();
   debug("PLAYER_EXIT\n");
+  wait_for_children();
   exit(EXIT_SUCCESS);
 }
 

@@ -40,6 +40,8 @@ void init() {
   // imposta l'handler per terminare
   // al segnale di fine del gioco
   set_signal_handler(GAME_END_SIGNAL, term, TRUE);
+  set_signal_handler(SIGINT, term, TRUE);
+  set_signal_handler(SIGABRT, term, TRUE);
   set_signal_handler(ROUND_END_SIGNAL, round_end, TRUE);
 }
 
@@ -59,7 +61,7 @@ void play_round() {
   sem_op(game_sem, SEM_ROUND_READY, 0, TRUE);
   debug("PAWN_START_PLAY\n");
   // se il giocatore dice di giocare allora gioca
-  if (0) {
+  if (msg.move) {
     // gioco
     play();
     // aspetto il segnale di fine round 
@@ -68,14 +70,14 @@ void play_round() {
     // aspetto il messaggio del prossimo round
     // e la ricezione fallirebbe
     if (!round_ended) {
-      wait_round_end();
+      infinite_sleep();
     }
   }
   // altrimenti aspetta la fine del round
   else {
-    wait_round_end();
+    infinite_sleep();
   }
-  debug("PAWN_ROUND_END_RECEIVED\n");
+  debug("PAWN_ROUND_END_RECEIVED, round_ended: %d\n", round_ended);
 }
 
 void play() {
@@ -208,10 +210,6 @@ void move_to(square* s) {
   // debug("MOVED TO: (%d,%d)\n", s->x, s->y);
   // effettuo la nanosleep prima di continuare a muovermi
   nano_sleep(_game->min_hold_nsec);
-}
-
-void wait_round_end() {
-  wait_signal(ROUND_END_SIGNAL);
 }
 
 void term(int sig) {

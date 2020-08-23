@@ -5,7 +5,7 @@
 #include "debug.h"
 #include "process.h"
 
-void infinite_sleep(int seconds) {
+void infinite_sleep() {
   // se sleep ritorna 0 significa che ha dormito per il tempo
   // definito, altrimenti è stato interrotto da un segnale
   while (sleep(INT_MAX) == 0) continue;

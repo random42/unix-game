@@ -11,7 +11,6 @@ void play();
 square* choose_next_square(square* target);
 void move_towards(square* target);
 void move_to(square* s);
-void wait_round_end();
 void term();
 
 #endif

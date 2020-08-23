@@ -51,11 +51,6 @@ void init_game() {
   int min_hold_nsec = atoi(getenv("SO_MIN_HOLD_NSEC"));
   mem = shm_create(SHM_KEY, get_game_size(n_players, n_pawns, board_height, board_width));
   _game = create_game(mem->ptr, n_players, n_pawns, max_time, board_height, board_width, flag_min, flag_max, round_score, max_pawn_moves, min_hold_nsec);
-  for (int i = 0; i < get_n_squares(_game); i++) {
-    square* s = get_square(_game, i);
-    double d = distance_from_center(_game, s);
-    debug("%lf (%d,%d)\n", d, s->x, s->y);
-  }
 }
 
 void spawn_players() {
@@ -95,6 +90,9 @@ void init() {
   // in quanto sono mandati da questo processo
   set_signal_handler(GAME_END_SIGNAL, SIG_IGN, TRUE);
   set_signal_handler(ROUND_END_SIGNAL, SIG_IGN, TRUE);
+  set_signal_handler(SIGABRT, term, TRUE);
+  set_signal_handler(SIGINT, term, TRUE);
+  set_signal_handler(SIGTERM, term, TRUE);
 }
 
 void start() {
@@ -106,7 +104,11 @@ void start() {
   // while (TRUE) {
     play_round();
   // }
-  end_game();
+  shm_read(mem);
+  print_game_stats(_game);
+  shm_stop_read(mem);
+  sleep(1);
+  term();
 }
 
 void placement_phase() {
@@ -131,14 +133,9 @@ void play_round() {
   // attende che i giocatori inviino le strategie
   sem_op(game_sem, SEM_ROUND_READY, 0, TRUE);
   debug("PLAYERS_READY\n");
-  sleep(1);
-  // // attende i messaggio di cattura delle bandiere
-  // for (int i = 0; i < flags; i++) {
-  //   message msg;
-  //   msg_receive(msg_queue, &msg, TRUE);
-  //   debug("FLAG_CAPTURED: %d/%d\n", i+1, flags);
-  //   remove_captured_flags(_game);
-  // }
+  // sleep(1);
+  // attende i messaggi di cattura delle bandiere
+  // wait_flag_captures(flags);
   debug("ROUND_END\n");
   // reimposta i semafori ai valori iniziali
   sem_op(game_sem, SEM_ROUND_START, 1, TRUE);
@@ -146,6 +143,14 @@ void play_round() {
   // manda il segnale di fine round a tutto il gruppo di processi
   send_signal(0, ROUND_END_SIGNAL);
   debug("ROUND_END_SENT\n");
+}
+
+void wait_flag_captures(int flags) {
+  for (int i = 0; i < flags; i++) {
+    message msg;
+    msg_receive(msg_queue, &msg, TRUE);
+    debug("FLAG_CAPTURED: %d/%d\n", i+1, flags);
+  }
 }
 
 int place_flags() {
@@ -174,12 +179,12 @@ int place_flags() {
 void end_round() {
 }
 
-void end_game() {
+void term() {
+  debug("MASTER_EXIT\n");
+  // send_signal(0, ROUND_END_SIGNAL);
   sleep(1);
-  debug("GAME_END\n");
   send_signal(0, GAME_END_SIGNAL);
   on_exit();
-  print_game_stats(_game);
   exit(EXIT_SUCCESS);
 }
 
