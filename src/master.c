@@ -20,16 +20,15 @@ shm* mem;
 int game_sem;
 int squares_sem;
 int msg_queue;
+int captured_flags;
 
 void end_game(int sig) {
-  printf("\nTimeout!\n");
+  end_round();
+  printf("\nTimeout!\nPosizione finale:\n");
   shm_read(mem);
+  print_game_state(_game);
   print_game_stats(_game);
   shm_stop_read(mem);
-  // per evitare che il segnale SIGTERM non venga intercettato
-  // dagli altri processi
-  // TODO
-  // nano_sleep(100000);
   term();
 }
 
@@ -120,27 +119,25 @@ void placement_phase() {
 
 void end_round() {
   debug("ROUND_END\n");
-  debug_count();
   // annullo il timeout di fine gioco
   clear_timeout();
-  debug_count();
   // reimposta i semafori ai valori iniziali
   sem_op(game_sem, SEM_ROUND_START, 1, TRUE);
-  debug_count();
   sem_set(game_sem, SEM_ROUND_READY, _game->n_players);
-  debug_count();
   // manda il segnale di fine round a tutto il gruppo di processi
   send_signal(0, ROUND_END_SIGNAL);
-  debug_count();
   debug("ROUND_END_SENT\n");
+  // sleep(1);
 }
 
 void play_round() {
-  int round = _game->rounds_played++;
+  shm_write(mem);
+  int round = ++_game->rounds_played;
+  shm_stop_write(mem);
   printf("Inizia il round numero %d\n", round);
   int flags = place_flags();
   shm_read(mem);
-  // print_game_state(_game);
+  print_game_state(_game);
   shm_stop_read(mem);
   // fa iniziare il round
   debug("ROUND_START\n");
@@ -151,6 +148,7 @@ void play_round() {
   // attende che i giocatori inviino le strategie
   sem_op(game_sem, SEM_ROUND_READY, 0, TRUE);
   debug("PLAYING!\n");
+  printf("I giocatori hanno inviato le strategie, i pedoni cominciano a muoversi..\n");
   // imposto il timeout di fine gioco
   set_timeout(end_game, _game->max_time, 0, TRUE);
   // sleep(3);
@@ -161,10 +159,11 @@ void play_round() {
 }
 
 void wait_flag_captures(int flags) {
-  for (int i = 0; i < flags; i++) {
+  while (captured_flags < flags) {
     message msg;
     msg_receive(msg_queue, &msg, TRUE);
-    debug("FLAG_CAPTURED: %d/%d\n", i+1, flags);
+    captured_flags++;
+    printf("Flag captured! %d/%d\n", captured_flags, flags);
   }
 }
 

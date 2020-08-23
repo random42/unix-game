@@ -56,56 +56,53 @@ void play_round() {
   debug("PAWN_ROUND_START\n");
   message msg;
   msg_receive(msg_queue, &msg, TRUE);
-  debug("MSG: %d\n", msg.move);
+  debug("STRATEGY: %s\n", msg.strategy ? "extern" : "center");
   sem_op(game_sem, SEM_ROUND_READY, 0, TRUE);
   debug("PAWN_START_PLAY\n");
-  // se il giocatore dice di giocare allora gioca
-  if (msg.move) {
-    // gioco
-    play();
-    // aspetto il segnale di fine round 
-    // se ho smesso di muovermi prima del segnale
-    // altrimenti potrei ricevere il segnale mentre
-    // aspetto il messaggio del prossimo round
-    // e la ricezione fallirebbe
-    if (!round_ended) {
-      infinite_sleep();
-    }
-  }
-  // altrimenti aspetta la fine del round
-  else {
-    infinite_sleep();
-  }
-  debug("PAWN_ROUND_END_RECEIVED round_ended: %d\n", round_ended);
+  // gioco
+  play(msg.strategy);
+  debug("PAWN_ROUND_END round_ended: %d\n", round_ended);
 }
 
-void play() {
-  int play = TRUE;
+void play(int strategy) {
   round_ended = FALSE;
-  while (play && !round_ended) {
+  // gioco finché il round non finisce
+  while (!round_ended) {
     shm_read(mem);
-    // scelgo come obiettivo la bandiera piu' lontana dal centro
-    square* target = furthest_controlled_flag_from_center(_game, me);
-    debug("MOVE_TOWARDS: (%d,%d)\n", target->x, target->y);
+    // scelgo la casella target in base alla strategia
+    square* target = NULL;
+    if (strategy == CENTER_STRATEGY) {
+      target = most_centered_controlled_flag(_game, me);
+    }
+    else if (strategy == EXTERN_STRATEGY) {
+      target = most_extern_controlled_flag(_game, me);
+    }
+    else {
+      error("unknown strategy: %d\n", strategy);
+    }
     shm_stop_read(mem);
+    // se target è null significa che non controllo bandiere
     if (target != NULL) {
-      // nel caso in cui un'altra pedina abbia già mosso
-      // potrebbe succedere che al momento della scelta del target
-      // questa pedina non controlli 
+      debug("MOVE_TOWARDS (%d,%d)\n", target->x, target->y);
       move_towards(target);
     }
-    shm_read(mem);
-    // continuo a muovermi se controllo altre bandiere
-    play = pawn_controls_any_flag(_game, me);
-    shm_stop_read(mem);
+    else {
+      // se non controllo bandiere attendo min_hold_nsec 
+      // in modo che qualche pedina si muova
+      // nel caso al prossimo ciclo controllo una bandiera
+      // debug("PAWN_SLEEPING\n");
+      nano_sleep(_game->min_hold_nsec);
+    }
   }
   debug("PAWN_PLAY_END round_ended: %d\n", round_ended);
 }
 
+// sceglie la casella in cui muovere per andare verso la casella target
+// se possibile sceglie una casella senza altre pedine
 square* choose_next_square(square* target) {
   shm_read(mem);
   // ci sono massimo due possibili direzioni da scegliere
-  square* choices[4];
+  square* choices[2];
   int i = 0;
   square* from = get_pawn_square(_game, me);
   int x = from->x;
@@ -152,22 +149,14 @@ square* choose_next_square(square* target) {
   return choice;
 }
 
+// fa una mossa verso la casella target
 void move_towards(square* target) {
-  // la pedina si muove finché non si trova nella casella target
   shm_read(mem);
-  int move = target->pawn_id != me->id;
-  // int move = 0;
+  // scelgo la casella in cui muovere
+  square* next = choose_next_square(target);
   shm_stop_read(mem);
-  while (move && !round_ended) {
-    // scelgo la casella in cui muovere
-    square* next = choose_next_square(target);
-    // muovo
-    move_to(next);
-    shm_read(mem);
-    // smetto di muovermi se sono arrivato alla casella target
-    move = target->pawn_id != me->id;
-    shm_stop_read(mem);
-  }
+  // muovo
+  move_to(next);
 }
 
 void move_to(square* s) {

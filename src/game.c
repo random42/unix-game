@@ -176,7 +176,7 @@ int get_controlled_flags(game* g, pawn* p, square** ptr) {
   return count;
 }
 
-square* furthest_controlled_flag_from_center(game* g, pawn* p) {
+square* most_extern_controlled_flag(game* g, pawn* p) {
   square* from = get_pawn_square(g, p);
   square* target = NULL;
   double max_distance = -1;
@@ -185,6 +185,21 @@ square* furthest_controlled_flag_from_center(game* g, pawn* p) {
     double distance = distance_from_center(g, s);
     if (has_flag(s) && pawn_controls_square(g, p, s) && distance > max_distance) {
       max_distance = distance;
+      target = s;
+    }
+  }
+  return target;
+}
+
+square* most_centered_controlled_flag(game* g, pawn* p) {
+  square* from = get_pawn_square(g, p);
+  square* target = NULL;
+  double min_distance = INT_MAX;
+  for (int i = 0; i < get_n_squares(g); i++) {
+    square* s = get_square(g, i);
+    double distance = distance_from_center(g, s);
+    if (has_flag(s) && pawn_controls_square(g, p, s) && distance < min_distance) {
+      min_distance = distance;
       target = s;
     }
   }

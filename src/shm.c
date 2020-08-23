@@ -60,7 +60,6 @@ shm* shm_get(int key) {
 
 void shm_read(shm* shm) {
   // debug("SHM_QUEUE\n");
-  // debug("PRE shm_read ptr: %p sem_id: %d\n", shm, shm->sem_id, READERS);
   sem_op(shm->sem_id, QUEUE, -1, TRUE);
   sem_op(shm->sem_id, READERS_LOCK, -1, TRUE);
   sem_op(shm->sem_id, READERS, 1, TRUE);
@@ -70,12 +69,10 @@ void shm_read(shm* shm) {
   }
   sem_op(shm->sem_id, QUEUE, 1, TRUE);
   sem_op(shm->sem_id, READERS_LOCK, 1, TRUE);
-  // debug("POST shm_read ptr: %p sem_id: %d\n", shm, shm->sem_id, READERS);
   // debug("SHM_READ\n");
 }
 
 void shm_stop_read(shm* shm) {
-  // debug("PRE shm_stop_read ptr: %p sem_id: %d\n", shm, shm->sem_id, READERS);
   sem_op(shm->sem_id, READERS_LOCK, -1, TRUE);
   sem_op(shm->sem_id, READERS, -1, TRUE);
   int readers = sem_get_value(shm->sem_id, READERS);
@@ -83,7 +80,6 @@ void shm_stop_read(shm* shm) {
     sem_op(shm->sem_id, WRITE_LOCK, 1, TRUE);
   }
   sem_op(shm->sem_id, READERS_LOCK, 1, TRUE);
-  // debug("POST shm_stop_read ptr: %p sem_id: %d\n", shm, shm->sem_id, READERS);
   // debug("SHM_STOP_READ\n");
 }
 

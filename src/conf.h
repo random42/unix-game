@@ -14,4 +14,7 @@
 
 #define ROUND_END_SIGNAL SIGUSR1
 
+#define CENTER_STRATEGY 0
+#define EXTERN_STRATEGY 1
+
 #endif

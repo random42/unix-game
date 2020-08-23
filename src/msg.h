@@ -2,10 +2,10 @@
 #define MSG_H
 
 typedef struct message {
-  // pid of receiver
-  long mtype;
-  // tells pawn if has to move
-  int move;
+  long mtype; // pid del processo ricevente
+  // vale 0 se la strategia è concentrarsi sulle bandiere più centrali
+  // o 1 per le bandiere più esterne
+  int strategy;
 } message;
 
 int msg_init(int key);

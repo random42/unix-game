@@ -91,7 +91,11 @@ int get_controlled_flags(game* g, pawn* p, square** ptr);
 // ritorna la casella con bandiera controllata dal pedone
 // che è più distante dal centro della scacchiera
 // NULL se il pedone non controlla bandiere
-square* furthest_controlled_flag_from_center(game* g, pawn* p);
+square* most_extern_controlled_flag(game* g, pawn* p);
+// ritorna la casella con bandiera controllata dal pedone
+// che è vicina al centro della scacchiera
+// NULL se il pedone non controlla bandiere
+square* most_centered_controlled_flag(game* g, pawn* p);
 // posiziona una bandiera nella casella
 void place_flag(square* square, int points);
 // posiziona la pedina nella casella

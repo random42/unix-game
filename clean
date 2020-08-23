@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# script per pulire il sistema dopo un'esecuzione fallita
+
+# termino forzatamente tutti i processi
+killall -KILL pawn player master
+
+# rimuovo tutte le strutture IPC
+# https://stackoverflow.com/questions/2143404/delete-all-system-v-shared-memory-and-semaphores-on-unix-like-systems
+
+for i in $(ipcs -a | grep "^s" | awk '{ print $2 }'); do
+  ipcrm -s $i
+done
+
+for i in $(ipcs -a | grep "^m" | awk '{ print $2 }'); do
+  ipcrm -m $i
+done
+
+for i in $(ipcs -a | grep "^q" | awk '{ print $2 }'); do
+  ipcrm -q $i
+done

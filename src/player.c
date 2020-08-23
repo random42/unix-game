@@ -109,7 +109,8 @@ void send_strategies() {
     pawn* p = get_pawn(_game, pawn_id++);
     message msg;
     msg.mtype = p->pid;
-    msg.move = pawn_controls_any_flag(_game, p);
+    // scelgo una delle due strategie in modo casuale uniforme
+    msg.strategy = random_int_range(0, 1);
     msg_send(msg_queue, &msg, TRUE);
   }
   shm_stop_read(mem);
@@ -125,10 +126,9 @@ void play_round() {
   debug("PLAYER_READY\n");
   // decrementa il semaforo per segnalare che è pronto
   sem_op(game_sem, SEM_ROUND_READY, -1, TRUE);
-  // attende la fine del round
-  debug("PLAYER_WAIT_ROUND_END\n");
+  // attende il segnale di fine round o di terminazione
+  debug("PLAYER_WAIT\n");
   infinite_sleep();
-  // wait_signal(ROUND_END_SIGNAL);
 }
 
 void term(int sig) {

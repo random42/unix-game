@@ -1,16 +1,16 @@
-## How to run
+## Come eseguire
 
-Compile:
+Compilare:
 
 ```bash
 make
 ```
 
-Set environment in *.env* file.
+Impostare le variabili d'ambiente nel file *.env*.
 
 ```bash
-# set env variables
+# esportare le variabili tramite questo comando
 export $(egrep -v '^#' .env | xargs)
-# execute
+# eseguire il processo master
 ./bin/master
 ```

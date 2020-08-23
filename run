@@ -1,0 +1,3 @@
+#!/bin/bash
+
+make && export $(egrep -v '^#' .env | xargs) && bin/master

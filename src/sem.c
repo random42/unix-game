@@ -35,9 +35,6 @@ int sem_op(int sem_id, int sem_num, short op, int wait) {
   s.sem_op = op;
   s.sem_flg = wait ? 0 : IPC_NOWAIT;
   int r = semop(sem_id, &s, 1);
-  if (r == -1) {
-    print_error;
-  }
   return r;
 }
 
