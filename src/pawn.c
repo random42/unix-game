@@ -57,7 +57,9 @@ void play_round() {
   msg_receive(msg_queue, &msg, TRUE);
   debug("MSG: %d\n", msg.move);
   sem_op(game_sem, SEM_ROUND_READY, 0, TRUE);
-  if (msg.move) {
+  debug("PAWN_START_PLAY\n");
+  // se il giocatore dice di giocare allora gioca
+  if (0) {
     // gioco
     play();
     // aspetto il segnale di fine round 
@@ -68,9 +70,12 @@ void play_round() {
     if (!round_ended) {
       wait_round_end();
     }
-  } else {
+  }
+  // altrimenti aspetta la fine del round
+  else {
     wait_round_end();
   }
+  debug("PAWN_ROUND_END_RECEIVED\n");
 }
 
 void play() {
@@ -78,8 +83,9 @@ void play() {
   round_ended = FALSE;
   while (play && !round_ended) {
     shm_read(mem);
-    // scelgo come obiettivo la bandiera piu' lontana da lcentro
+    // scelgo come obiettivo la bandiera piu' lontana dal centro
     square* target = furthest_controlled_flag_from_center(_game, me);
+    debug("MOVE_TOWARDS: (%d,%d)\n", target->x, target->y);
     shm_stop_read(mem);
     if (target != NULL) {
       // nel caso in cui un'altra pedina abbia già mosso
@@ -149,6 +155,7 @@ void move_towards(square* target) {
   // la pedina si muove finché non si trova nella casella target
   shm_read(mem);
   int move = target->pawn_id != me->id;
+  // int move = 0;
   shm_stop_read(mem);
   while (move && !round_ended) {
     // scelgo la casella in cui muovere
@@ -163,12 +170,15 @@ void move_towards(square* target) {
 }
 
 void move_to(square* s) {
-  debug("MOVING TO: (%d,%d)\n", s->x, s->y);
+  // debug("MOVING TO: (%d,%d)\n", s->x, s->y);
   int r;
   square* from = get_pawn_square(_game, me);
   // prendo il lock della casella di arrivo
   r = sem_op(squares_sem, get_square_index(_game, s->x, s->y), -1, TRUE);
   if (r == -1) {
+    // se va in errore significa che 
+    // è arrivato il segnale di fine round
+    // e quindi non faccio la mossa
     debug("SQUARE_LOCK semop: %s\n", strerror(errno));
     return;
   }
@@ -179,10 +189,11 @@ void move_to(square* s) {
   int captured_flag = has_flag(s);
   // muovo la pedina
   move_pawn(_game, me, s);
-  //debug
-  debug_p();
-  print_game_state(_game);
-  debug_v();
+  // qua devo prendere esplicitamente il lock di debug
+  // perche' print_game_state usa printf e non debug
+  // debug_p();
+  // print_game_state(_game);
+  // debug_v();
   shm_stop_write(mem);
   // se ho catturato una bandiera mando il segnale al master
   // conosco il suo pid perché è il mio process group id
@@ -194,7 +205,7 @@ void move_to(square* s) {
     msg.mtype = master_pid;
     msg_send(msg_queue, &msg, TRUE);
   }
-  debug("MOVED TO: (%d,%d)\n", s->x, s->y);
+  // debug("MOVED TO: (%d,%d)\n", s->x, s->y);
   // effettuo la nanosleep prima di continuare a muovermi
   nano_sleep(_game->min_hold_nsec);
 }

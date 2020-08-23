@@ -31,6 +31,8 @@ void on_exit() {
 }
 
 void init_game() {
+  // getenv: prende la stringa di una variabile d'ambiente
+  // atoi: converte una stringa in un intero
   char* s = getenv("SO_NUM_G");
   // per essere sicuri di aver impostato l'ambiente del processo
   if (s == NULL) {
@@ -47,9 +49,13 @@ void init_game() {
   int round_score = atoi(getenv("SO_ROUND_SCORE"));
   int max_pawn_moves = atoi(getenv("SO_N_MOVES"));
   int min_hold_nsec = atoi(getenv("SO_MIN_HOLD_NSEC"));
-  // TODO assert validity of config
   mem = shm_create(SHM_KEY, get_game_size(n_players, n_pawns, board_height, board_width));
   _game = create_game(mem->ptr, n_players, n_pawns, max_time, board_height, board_width, flag_min, flag_max, round_score, max_pawn_moves, min_hold_nsec);
+  for (int i = 0; i < get_n_squares(_game); i++) {
+    square* s = get_square(_game, i);
+    double d = distance_from_center(_game, s);
+    debug("%lf (%d,%d)\n", d, s->x, s->y);
+  }
 }
 
 void spawn_players() {
@@ -125,18 +131,21 @@ void play_round() {
   // attende che i giocatori inviino le strategie
   sem_op(game_sem, SEM_ROUND_READY, 0, TRUE);
   debug("PLAYERS_READY\n");
-  // attende i messaggio di cattura delle bandiere
-  for (int i = 0; i < flags; i++) {
-    message msg;
-    msg_receive(msg_queue, &msg, TRUE);
-    debug("FLAG_CAPTURED: %d/%d\n", i+1, flags);
-    remove_captured_flags(_game);
-  }
+  sleep(1);
+  // // attende i messaggio di cattura delle bandiere
+  // for (int i = 0; i < flags; i++) {
+  //   message msg;
+  //   msg_receive(msg_queue, &msg, TRUE);
+  //   debug("FLAG_CAPTURED: %d/%d\n", i+1, flags);
+  //   remove_captured_flags(_game);
+  // }
   debug("ROUND_END\n");
   // reimposta i semafori ai valori iniziali
   sem_op(game_sem, SEM_ROUND_START, 1, TRUE);
   sem_set(game_sem, SEM_ROUND_READY, _game->n_players);
+  // manda il segnale di fine round a tutto il gruppo di processi
   send_signal(0, ROUND_END_SIGNAL);
+  debug("ROUND_END_SENT\n");
 }
 
 int place_flags() {
@@ -166,6 +175,7 @@ void end_round() {
 }
 
 void end_game() {
+  sleep(1);
   debug("GAME_END\n");
   send_signal(0, GAME_END_SIGNAL);
   on_exit();

@@ -5,6 +5,12 @@
 #include "debug.h"
 #include "process.h"
 
+void infinite_sleep(int seconds) {
+  // se sleep ritorna 0 significa che ha dormito per il tempo
+  // definito, altrimenti è stato interrotto da un segnale
+  while (sleep(INT_MAX) == 0) continue;
+}
+
 int nano_sleep(long ns) {
   // un secondo sono 1 miliardo di nanosecondi
   long one_sec = 1e9;

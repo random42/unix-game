@@ -1,6 +1,7 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
+void infinite_sleep(int seconds);
 // effettua una nanosleep
 int nano_sleep(long ns);
 int get_process_id();

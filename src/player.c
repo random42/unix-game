@@ -22,10 +22,6 @@ void sig_handler(int sig) {
   debug("SIGNAL: %d\n", sig);
 }
 
-void on_exit() {
-  wait_for_children();
-}
-
 void init() {
   pid = get_process_id();
   // inizializza la libreria random
@@ -143,6 +139,5 @@ int main(int argc, char* argv[]) {
   assert(argc > 0);
   id = atoi(argv[0]);
   init();
-  atexit(on_exit);
   start();
 }

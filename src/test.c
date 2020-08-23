@@ -68,9 +68,9 @@ void test_game() {
 
 int main() {
   debug_create(SEM_DEBUG_KEY);
-  int a = 4;
-  int x[a];
-  x[4] = 10;
+  int a = 1;
+  double b = a;
+  printf("%lf\n", b);
   // void* x = 0;
   // void* y = x + sizeof(game);
   // printf("x %d, y %d, diff %d\n", x, y, y-x);
