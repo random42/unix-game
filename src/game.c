@@ -211,6 +211,12 @@ void move_pawn(game* g, pawn* pawn, square* to) {
   pawn->x = to->x;
   pawn->y = to->y;
   pawn->moves_left--;
+  if (to->has_flag) {
+    to->has_flag = FALSE;
+    player* pl = get_player(g, pawn->player_id);
+    pl->points += to->flag_points;
+    to->flag_points = 0;
+  }
 }
 
 void remove_captured_flags(game* g) {
