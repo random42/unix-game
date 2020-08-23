@@ -38,11 +38,10 @@ void init() {
   me = get_pawn(_game, id);
   shm_stop_read(mem);
   // imposta l'handler per terminare
-  // al segnale di fine del gioco
-  set_signal_handler(GAME_END_SIGNAL, term, TRUE);
+  set_signal_handler(SIGTERM, term, TRUE);
   set_signal_handler(SIGINT, term, TRUE);
   set_signal_handler(SIGABRT, term, TRUE);
-  set_signal_handler(ROUND_END_SIGNAL, round_end, TRUE);
+  set_signal_handler(ROUND_END_SIGNAL, round_end, FALSE);
 }
 
 void start() {
@@ -77,7 +76,7 @@ void play_round() {
   else {
     infinite_sleep();
   }
-  debug("PAWN_ROUND_END_RECEIVED, round_ended: %d\n", round_ended);
+  debug("PAWN_ROUND_END_RECEIVED round_ended: %d\n", round_ended);
 }
 
 void play() {

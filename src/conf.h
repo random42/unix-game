@@ -13,6 +13,5 @@
 #define SEM_ROUND_START 2
 
 #define ROUND_END_SIGNAL SIGUSR1
-#define GAME_END_SIGNAL SIGTERM
 
 #endif

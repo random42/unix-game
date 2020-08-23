@@ -2,18 +2,14 @@
 #define SHM_H
 
 typedef struct shm {
-  int id;
-  int size; // memory size in bytes
-  void* ptr; // memory pointer
-  void* free; // free memory
-  int sem_id; // semaphore id
+  int id; // id della memoria
+  int size; // byte allocati
+  void* ptr; // puntatore all'inizio della memoria
+  int sem_id; // id del set di semafori usati per sincronizzare lettura/scrittura
 } shm;
 
 shm* shm_create(int key, int size);
 shm* shm_get(int key);
-int shm_get_free_space(shm* shm);
-// allocate memory, only one process can use it
-void* shm_alloc(shm* shm, int bytes);
 void shm_read(shm* shm);
 void shm_stop_read(shm* shm);
 void shm_write(shm* shm);

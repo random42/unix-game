@@ -36,7 +36,6 @@ shm* shm_create(int key, int size) {
   shm->id = id;
   shm->size = size;
   shm->ptr = ptr;
-  shm->free = ptr;
   shm->sem_id = sem_id;
   return shm;
 }
@@ -54,33 +53,14 @@ shm* shm_get(int key) {
   int sem_id = sem_get(key + 1);
   shm->id = id;
   shm->size = 0;
-  shm->free = NULL;
   shm->ptr = ptr;
   shm->sem_id = sem_id;
   return shm;
 }
 
-int shm_get_free_space(shm* shm) {
-  // verifico che il processo creatore stia allocando memoria
-  assert(shm->free != NULL);
-  return shm->size - (shm->free - shm->ptr);
-}
-
-void* shm_alloc(shm* shm, int bytes) {
-  // debug("[shm] size %d, free %d, bytes %d\n", shm->size, shm_get_free_space(shm), bytes);
-  assert(bytes > 0);
-  // verifico che il processo creatore stia allocando memoria
-  assert(shm->free != NULL);
-  // verifico che ci sia abbastanza spazio da allocare
-  assert(shm_get_free_space(shm) >= bytes);
-  void* r = shm->free;
-  shm->free += bytes;
-  return r;
-}
-
 void shm_read(shm* shm) {
   // debug("SHM_QUEUE\n");
-  // debug("shm_read  sem_id: %d\n", shm->sem_id, READERS);
+  // debug("PRE shm_read ptr: %p sem_id: %d\n", shm, shm->sem_id, READERS);
   sem_op(shm->sem_id, QUEUE, -1, TRUE);
   sem_op(shm->sem_id, READERS_LOCK, -1, TRUE);
   sem_op(shm->sem_id, READERS, 1, TRUE);
@@ -90,11 +70,12 @@ void shm_read(shm* shm) {
   }
   sem_op(shm->sem_id, QUEUE, 1, TRUE);
   sem_op(shm->sem_id, READERS_LOCK, 1, TRUE);
+  // debug("POST shm_read ptr: %p sem_id: %d\n", shm, shm->sem_id, READERS);
   // debug("SHM_READ\n");
 }
 
 void shm_stop_read(shm* shm) {
-  // debug("shm_stop_read  sem_id: %d\n", shm->sem_id, READERS);
+  // debug("PRE shm_stop_read ptr: %p sem_id: %d\n", shm, shm->sem_id, READERS);
   sem_op(shm->sem_id, READERS_LOCK, -1, TRUE);
   sem_op(shm->sem_id, READERS, -1, TRUE);
   int readers = sem_get_value(shm->sem_id, READERS);
@@ -102,6 +83,7 @@ void shm_stop_read(shm* shm) {
     sem_op(shm->sem_id, WRITE_LOCK, 1, TRUE);
   }
   sem_op(shm->sem_id, READERS_LOCK, 1, TRUE);
+  // debug("POST shm_stop_read ptr: %p sem_id: %d\n", shm, shm->sem_id, READERS);
   // debug("SHM_STOP_READ\n");
 }
 

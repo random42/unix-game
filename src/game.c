@@ -271,7 +271,7 @@ void print_game_state(game* g) {
 }
 
 void print_game_stats(game* g) {
-  printf("\n METRICHE DEL GIOCO\n\n");
+  printf("\nStatistiche del gioco\n\n");
   double game_time = elapsed_time(&g->start_time);
   int total_moves = g->max_pawn_moves * g->n_pawns;
   int total_points = 0;

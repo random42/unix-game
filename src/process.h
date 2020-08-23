@@ -1,6 +1,8 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
+// sleep infinita
+// utile per attendere un segnale
 void infinite_sleep();
 // effettua una nanosleep
 int nano_sleep(long ns);

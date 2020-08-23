@@ -38,12 +38,11 @@ void init() {
   me = get_player(_game, id);
   shm_stop_read(mem);
   // imposta l'handler per terminare
-  // al segnale di fine del gioco
-  set_signal_handler(GAME_END_SIGNAL, term, TRUE);
+  set_signal_handler(SIGTERM, term, TRUE);
   set_signal_handler(SIGINT, term, TRUE);
   set_signal_handler(SIGABRT, term, TRUE);
   // se non imposto un handler non posso usare la wait_signal
-  set_signal_handler(ROUND_END_SIGNAL, sig_handler, TRUE);
+  set_signal_handler(ROUND_END_SIGNAL, sig_handler, FALSE);
 }
 
 void spawn_pawns() {

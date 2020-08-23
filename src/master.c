@@ -21,13 +21,16 @@ int game_sem;
 int squares_sem;
 int msg_queue;
 
-void on_exit() {
-  wait_for_children();
-  msg_close(msg_queue);
-  shm_delete(mem);
-  sem_delete(game_sem);
-  sem_delete(squares_sem);
-  debug_close();
+void end_game(int sig) {
+  printf("\nTimeout!\n");
+  shm_read(mem);
+  print_game_stats(_game);
+  shm_stop_read(mem);
+  // per evitare che il segnale SIGTERM non venga intercettato
+  // dagli altri processi
+  // TODO
+  // nano_sleep(100000);
+  term();
 }
 
 void init_game() {
@@ -86,9 +89,8 @@ void init() {
   // imposto l'id di questo processo come id del gruppo di processi
   // in modo da mandare facilmente segnali a tutti i processi figli
   set_process_group_id(0, 0);
-  // ignora il segnale di fine gioco e di fine round
-  // in quanto sono mandati da questo processo
-  set_signal_handler(GAME_END_SIGNAL, SIG_IGN, TRUE);
+  // ignora il segnale di fine round
+  // in quanto viene mandato da questo processo
   set_signal_handler(ROUND_END_SIGNAL, SIG_IGN, TRUE);
   set_signal_handler(SIGABRT, term, TRUE);
   set_signal_handler(SIGINT, term, TRUE);
@@ -101,14 +103,11 @@ void start() {
   placement_phase();
   // set game start time
   gettimeofday(&_game->start_time, NULL);
-  // while (TRUE) {
+  while (TRUE) {
     play_round();
-  // }
-  shm_read(mem);
-  print_game_stats(_game);
-  shm_stop_read(mem);
-  sleep(1);
-  term();
+  }
+  // debug("NORMAL_TERM\n");
+  // end_game(0);
 }
 
 void placement_phase() {
@@ -119,11 +118,30 @@ void placement_phase() {
   printf("Fase di posizionamento terminata\n");
 }
 
+void end_round() {
+  debug("ROUND_END\n");
+  debug_count();
+  // annullo il timeout di fine gioco
+  clear_timeout();
+  debug_count();
+  // reimposta i semafori ai valori iniziali
+  sem_op(game_sem, SEM_ROUND_START, 1, TRUE);
+  debug_count();
+  sem_set(game_sem, SEM_ROUND_READY, _game->n_players);
+  debug_count();
+  // manda il segnale di fine round a tutto il gruppo di processi
+  send_signal(0, ROUND_END_SIGNAL);
+  debug_count();
+  debug("ROUND_END_SENT\n");
+}
+
 void play_round() {
   int round = _game->rounds_played++;
   printf("Inizia il round numero %d\n", round);
   int flags = place_flags();
-  print_game_state(_game);
+  shm_read(mem);
+  // print_game_state(_game);
+  shm_stop_read(mem);
   // fa iniziare il round
   debug("ROUND_START\n");
   // fa mandare le strategie dai giocatori
@@ -132,17 +150,14 @@ void play_round() {
   debug("ROUND_STARTED\n");
   // attende che i giocatori inviino le strategie
   sem_op(game_sem, SEM_ROUND_READY, 0, TRUE);
-  debug("PLAYERS_READY\n");
-  // sleep(1);
+  debug("PLAYING!\n");
+  // imposto il timeout di fine gioco
+  set_timeout(end_game, _game->max_time, 0, TRUE);
+  // sleep(3);
   // attende i messaggi di cattura delle bandiere
-  // wait_flag_captures(flags);
-  debug("ROUND_END\n");
-  // reimposta i semafori ai valori iniziali
-  sem_op(game_sem, SEM_ROUND_START, 1, TRUE);
-  sem_set(game_sem, SEM_ROUND_READY, _game->n_players);
-  // manda il segnale di fine round a tutto il gruppo di processi
-  send_signal(0, ROUND_END_SIGNAL);
-  debug("ROUND_END_SENT\n");
+  wait_flag_captures(flags);
+  // termina il round
+  end_round();
 }
 
 void wait_flag_captures(int flags) {
@@ -176,15 +191,18 @@ int place_flags() {
   return flags;
 }
 
-void end_round() {
-}
-
 void term() {
   debug("MASTER_EXIT\n");
-  // send_signal(0, ROUND_END_SIGNAL);
-  sleep(1);
-  send_signal(0, GAME_END_SIGNAL);
-  on_exit();
+  // manda il segnale di terminare agli altri processi
+  send_signal(0, SIGTERM);
+  // aspetta che terminino
+  wait_for_children();
+  // elimina le risorse ipc
+  msg_close(msg_queue);
+  shm_delete(mem);
+  sem_delete(game_sem);
+  sem_delete(squares_sem);
+  debug_close();
   exit(EXIT_SUCCESS);
 }
 
