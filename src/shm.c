@@ -122,6 +122,7 @@ void shm_delete(shm* shm) {
   if (shmctl(shm->id, IPC_RMID, NULL) == -1) {
     debug("shmctl\n");
   }
+  sem_delete(shm->sem_id);
   free(shm);
 }
 
