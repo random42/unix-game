@@ -8,6 +8,7 @@
 void infinite_sleep() {
   // se sleep ritorna 0 significa che ha dormito per il tempo
   // definito, altrimenti è stato interrotto da un segnale
+  // e ritorna i secondi mancanti
   while (sleep(INT_MAX) == 0) continue;
 }
 

@@ -93,7 +93,7 @@ void placement_phase() {
     square* s = choose_placement_square();
     shm_stop_read(mem);
     shm_write(mem);
-    // piazza il pedone
+    // piazza il pedina
     place_pawn(p, s);
     // acquisisce il lock della casella per indicare che è occupata
     sem_op(squares_sem, get_square_index(_game, s->x, s->y), -1, TRUE);
@@ -126,8 +126,8 @@ void play_round() {
   debug("PLAYER_READY\n");
   // decrementa il semaforo per segnalare che è pronto
   sem_op(game_sem, SEM_ROUND_READY, -1, TRUE);
-  // attende il segnale di fine round o di terminazione
   debug("PLAYER_WAIT\n");
+  // attende il segnale di fine round o di terminazione
   infinite_sleep();
 }
 

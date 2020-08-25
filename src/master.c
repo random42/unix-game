@@ -20,7 +20,6 @@ shm* mem;
 int game_sem;
 int squares_sem;
 int msg_queue;
-int captured_flags;
 
 void end_game(int sig) {
   end_round();
@@ -159,6 +158,7 @@ void play_round() {
 }
 
 void wait_flag_captures(int flags) {
+  int captured_flags = 0;
   while (captured_flags < flags) {
     message msg;
     msg_receive(msg_queue, &msg, TRUE);
@@ -193,6 +193,7 @@ int place_flags() {
 void term() {
   debug("MASTER_EXIT\n");
   // manda il segnale di terminare agli altri processi
+  // 0 per mandare al gruppo di processi
   send_signal(0, SIGTERM);
   // aspetta che terminino
   wait_for_children();

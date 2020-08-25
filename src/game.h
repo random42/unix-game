@@ -85,9 +85,6 @@ double distance_from_center(game* g, square* s);
 int pawn_controls_square(game* g, pawn* p, square* target);
 // ritorna TRUE se il pedone controlla almeno una bandiera
 int pawn_controls_any_flag(game* g, pawn* p);
-// scrive sul puntatore le caselle con bandiera controllate dal pedone
-// e ne ritorna il numero
-int get_controlled_flags(game* g, pawn* p, square** ptr);
 // ritorna la casella con bandiera controllata dal pedone
 // che è più distante dal centro della scacchiera
 // NULL se il pedone non controlla bandiere

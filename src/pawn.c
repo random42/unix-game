@@ -53,6 +53,8 @@ void start() {
 }
 
 void play_round() {
+  sem_op(game_sem, SEM_ROUND_START, 0, TRUE);
+  round_ended = FALSE;
   debug("PAWN_ROUND_START\n");
   message msg;
   msg_receive(msg_queue, &msg, TRUE);
@@ -65,7 +67,6 @@ void play_round() {
 }
 
 void play(int strategy) {
-  round_ended = FALSE;
   // gioco finché il round non finisce
   while (!round_ended) {
     shm_read(mem);
@@ -107,6 +108,7 @@ square* choose_next_square(square* target) {
   square* from = get_pawn_square(_game, me);
   int x = from->x;
   int y = from->y;
+  // prendo le due caselle di scelta tra le 4 mosse disponibili
   if (x > target->x) {
     choices[i++] = get_square_in(_game, x-1, y);
   }
@@ -119,10 +121,11 @@ square* choose_next_square(square* target) {
   if (y < target->y) {
     choices[i++] = get_square_in(_game, x, y+1);
   }
-  if (!(i > 0 && i <= 2)) {
+  if (!(i >= 1 && i <= 2)) {
     debug("i = %d, from (%d,%d) to (%d,%d)\n", i, x, y, target->x, target->y);
   }
-  assert(i > 0 && i <= 2);
+  // verifico di avere massimo una o due mosse
+  assert(i >= 1 && i <= 2);
   square* choice;
   // caso in cui ci sia solo una potenziale mossa
   if (i == 1) {
@@ -138,11 +141,8 @@ square* choose_next_square(square* target) {
       choice = choices[0];
     }
     else {
-      double r = random_zero_to_one();
-      if (r >= 0.5) {
-        choice = choices[0];
-      }
-      else choice = choices[1];
+      int j = random_int_range(0, 1);
+      choice = choices[j];
     }
   }
   shm_stop_read(mem);

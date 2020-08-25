@@ -162,20 +162,6 @@ int pawn_controls_any_flag(game* g, pawn* p) {
   return controls;
 }
 
-// TODO remove if possibile
-int get_controlled_flags(game* g, pawn* p, square** ptr) {
-  square* from = get_pawn_square(g, p);
-  int controls = FALSE;
-  int count = 0;
-  for (int i = 0; i < get_n_squares(g); i++) {
-    square* s = get_square(g, i);
-    if (has_flag(s) && pawn_controls_square(g, p, s)) {
-      ptr[count++] = s;
-    }
-  }
-  return count;
-}
-
 square* most_extern_controlled_flag(game* g, pawn* p) {
   square* from = get_pawn_square(g, p);
   square* target = NULL;
