@@ -7,9 +7,9 @@ Una casella è "controllata" da una pedina se e solo se la distanza tra la pedin
 Nella fase di posizionamento delle pedine, ogni giocatore posiziona
 la pedina in una casella libera casuale.
 
-All'inizio del round ogni giocatore sceglie casualmente tra due strategie da inviare a ogni pedina: una strategia fa si' che la pedina cerchi di raggiungere la bandiera controllata piu' vicina al centro della scacchiera, mentre la seconda strategia punta alle bandiere piu' distanti dal centro.
+All'inizio del round ogni giocatore sceglie casualmente tra due strategie da inviare a ogni pedina: una strategia fa si che la pedina cerchi di raggiungere la bandiera controllata più vicina al centro della scacchiera, mentre la seconda strategia punta alla bandiera controllata più distante dal centro.
 
-Ogni pedina cerca di fare una mossa verso la bandiera controllata che si addice alla propria strategia. Se non controlla nessuna bandiera resta in attesa *SO_MIN_HOLD_NSEC* nanosecondi in modo che le altre pedine muovano e poi verifica nuovamente se controlla altre bandiere.
+Finché il round non è finito, ogni pedina cerca continuamente di fare una mossa verso la bandiera controllata che si addice alla propria strategia. Se non controlla nessuna bandiera resta in attesa *SO_MIN_HOLD_NSEC* nanosecondi in modo che le altre pedine muovano e al ciclo successivo potrebbe controllare una bandiera.
 
 Il percorso più veloce verso una casella consente massimo due possibilità di direzione: nel caso di due direzioni disponibili la pedina cercherà di spostarsi possibilmente verso una casella libera. Il tentativo di spostamento richiederà l'accesso al semaforo in maniera bloccante. Non ci saranno mai casi di deadlock perché se due pedine dovessero "scontrarsi" e andare in direzioni opposte ciò significa che non controllavano la casella in cui si dirigono.
 

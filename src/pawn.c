@@ -90,7 +90,7 @@ void play(int strategy) {
       // se non controllo bandiere attendo min_hold_nsec 
       // in modo che qualche pedina si muova
       // nel caso al prossimo ciclo controllo una bandiera
-      debug("PAWN_SLEEPING\n");
+      // debug("PAWN_SLEEPING\n");
       nano_sleep(_game->min_hold_nsec);
     }
   }
