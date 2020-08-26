@@ -41,6 +41,7 @@ void init() {
   set_signal_handler(SIGTERM, term, TRUE);
   set_signal_handler(SIGINT, term, TRUE);
   set_signal_handler(SIGABRT, term, TRUE);
+  // il segnale di fine round può essere interrotto da altri segnali
   set_signal_handler(ROUND_END_SIGNAL, round_end, FALSE);
 }
 
@@ -53,7 +54,6 @@ void start() {
 }
 
 void play_round() {
-  sem_op(game_sem, SEM_ROUND_START, 0, TRUE);
   round_ended = FALSE;
   debug("PAWN_ROUND_START\n");
   message msg;
@@ -69,6 +69,8 @@ void play_round() {
 void play(int strategy) {
   // gioco finché il round non finisce
   while (!round_ended) {
+    // debug("PAWN_PLAY\n");
+    // debug("1\n");
     shm_read(mem);
     // scelgo la casella target in base alla strategia
     square* target = NULL;
@@ -78,24 +80,21 @@ void play(int strategy) {
     else if (strategy == EXTERN_STRATEGY) {
       target = most_extern_controlled_flag(_game, me);
     }
-    else {
-      error("unknown strategy: %d\n", strategy);
-    }
     shm_stop_read(mem);
     // se target è null significa che non controllo bandiere
     if (target != NULL) {
-      debug("MOVE_TOWARDS (%d,%d)\n", target->x, target->y);
+      debug("MOVE_TOWARDS (%d,%d) FROM (%d, %d)\n", target->x, target->y, me->x, me->y);
       move_towards(target);
     }
     else {
       // se non controllo bandiere attendo min_hold_nsec 
       // in modo che qualche pedina si muova
       // nel caso al prossimo ciclo controllo una bandiera
-      // debug("PAWN_SLEEPING\n");
+      debug("PAWN_SLEEPING\n");
       nano_sleep(_game->min_hold_nsec);
     }
   }
-  debug("PAWN_PLAY_END round_ended: %d\n", round_ended);
+  debug("PAWN_PLAY_END\n");
 }
 
 // sceglie la casella in cui muovere per andare verso la casella target
@@ -164,6 +163,7 @@ void move_to(square* s) {
   int r;
   square* from = get_pawn_square(_game, me);
   // prendo il lock della casella di arrivo
+  debug("WAITING_SQUARE\n");
   r = sem_op(squares_sem, get_square_index(_game, s->x, s->y), -1, TRUE);
   if (r == -1) {
     // se va in errore significa che 
@@ -181,9 +181,10 @@ void move_to(square* s) {
   move_pawn(_game, me, s);
   // qua devo prendere esplicitamente il lock di debug
   // perche' print_game_state usa printf e non debug
-  // debug_p();
-  // print_game_state(_game);
-  // debug_v();
+  debug("\n");
+  debug_p();
+  print_game_state(_game);
+  debug_v();
   shm_stop_write(mem);
   // se ho catturato una bandiera mando il segnale al master
   // conosco il suo pid perché è il mio process group id

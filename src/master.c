@@ -21,16 +21,6 @@ int game_sem;
 int squares_sem;
 int msg_queue;
 
-void end_game(int sig) {
-  end_round();
-  printf("\nTimeout!\nPosizione finale:\n");
-  shm_read(mem);
-  print_game_state(_game);
-  print_game_stats(_game);
-  shm_stop_read(mem);
-  term();
-}
-
 void init_game() {
   // getenv: prende la stringa di una variabile d'ambiente
   // atoi: converte una stringa in un intero
@@ -105,7 +95,6 @@ void start() {
     play_round();
   }
   // debug("NORMAL_TERM\n");
-  // end_game(0);
 }
 
 void placement_phase() {
@@ -149,7 +138,7 @@ void play_round() {
   debug("PLAYING!\n");
   printf("I giocatori hanno inviato le strategie, i pedoni cominciano a muoversi..\n");
   // imposto il timeout di fine gioco
-  set_timeout(end_game, _game->max_time, 0, TRUE);
+  set_timeout(term, _game->max_time, 0, TRUE);
   // sleep(3);
   // attende i messaggi di cattura delle bandiere
   wait_flag_captures(flags);
@@ -163,7 +152,7 @@ void wait_flag_captures(int flags) {
     message msg;
     msg_receive(msg_queue, &msg, TRUE);
     captured_flags++;
-    printf("Flag captured! %d/%d\n", captured_flags, flags);
+    printf("Bandiera catturata! %d/%d\n", captured_flags, flags);
   }
 }
 
@@ -192,11 +181,16 @@ int place_flags() {
 
 void term() {
   debug("MASTER_EXIT\n");
-  // manda il segnale di terminare agli altri processi
+    // manda il segnale di terminare agli altri processi
   // 0 per mandare al gruppo di processi
   send_signal(0, SIGTERM);
   // aspetta che terminino
   wait_for_children();
+  printf("\nTimeout!\nPosizione finale:\n");
+  shm_read(mem);
+  print_game_state(_game);
+  print_game_stats(_game);
+  shm_stop_read(mem);
   // elimina le risorse ipc
   msg_close(msg_queue);
   shm_delete(mem);

@@ -9,7 +9,7 @@
 #include <errno.h>
 #include "common.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 #define debug(x, ...) if (DEBUG) {debug_p();printf("[%d] ", getpid());printf(x, ##__VA_ARGS__);debug_v();}
 

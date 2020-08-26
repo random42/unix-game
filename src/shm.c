@@ -15,7 +15,6 @@ static int READERS = 2; // semaforo che conta il numero di lettori
 static int QUEUE = 3; // lock che preserva l'ordine delle richieste di scrittura/lettura
 static int _sem_id;
 
-// create shared memory
 shm* shm_create(int key, int size) {
   shm* shm = malloc(sizeof(shm));
   int id = shmget(key, size, 0600 | IPC_CREAT);
@@ -59,41 +58,43 @@ shm* shm_get(int key) {
 }
 
 void shm_read(shm* shm) {
-  // debug("SHM_QUEUE\n");
+  debug("SHM_QUEUE_READ\n");
   sem_op(shm->sem_id, QUEUE, -1, TRUE);
   sem_op(shm->sem_id, READERS_LOCK, -1, TRUE);
   sem_op(shm->sem_id, READERS, 1, TRUE);
   int readers = sem_get_value(shm->sem_id, READERS);
+  debug("SHM_READERS = %d\n", readers);
   if (readers == 1) {
     sem_op(shm->sem_id, WRITE_LOCK, -1, TRUE);
   }
-  sem_op(shm->sem_id, QUEUE, 1, TRUE);
   sem_op(shm->sem_id, READERS_LOCK, 1, TRUE);
-  // debug("SHM_READ\n");
+  debug("SHM_READ\n");
+  sem_op(shm->sem_id, QUEUE, 1, TRUE);
 }
 
 void shm_stop_read(shm* shm) {
   sem_op(shm->sem_id, READERS_LOCK, -1, TRUE);
   sem_op(shm->sem_id, READERS, -1, TRUE);
   int readers = sem_get_value(shm->sem_id, READERS);
+  debug("SHM_READERS = %d\n", readers);
   if (readers == 0) {
     sem_op(shm->sem_id, WRITE_LOCK, 1, TRUE);
   }
+  debug("SHM_STOP_READ\n");
   sem_op(shm->sem_id, READERS_LOCK, 1, TRUE);
-  // debug("SHM_STOP_READ\n");
 }
 
 void shm_write(shm* shm) {
-  // debug("SHM_QUEUE\n");
+  debug("SHM_QUEUE_WRITE\n");
   sem_op(shm->sem_id, QUEUE, -1, TRUE);
   sem_op(shm->sem_id, WRITE_LOCK, -1, TRUE);
+  debug("SHM_WRITE\n");
   sem_op(shm->sem_id, QUEUE, 1, TRUE);
-  // debug("SHM_WRITE\n");
 }
 
 void shm_stop_write(shm* shm) {
+  debug("SHM_STOP_WRITE\n");
   sem_op(shm->sem_id, WRITE_LOCK, 1, TRUE);
-  // debug("SHM_STOP_WRITE\n");
 }
 
 void shm_delete(shm* shm) {
