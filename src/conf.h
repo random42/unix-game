@@ -12,6 +12,7 @@
 #define SEM_ROUND_READY 1
 #define SEM_ROUND_START 2
 
+#include <signal.h>
 #define ROUND_END_SIGNAL SIGUSR1
 
 #define CENTER_STRATEGY 0

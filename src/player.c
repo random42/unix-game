@@ -1,3 +1,4 @@
+#include <signal.h>
 #include "common.h"
 #include "conf.h"
 #include "process.h"

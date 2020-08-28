@@ -1,6 +1,8 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include <sys/time.h>
+
 typedef enum Direction {UP = 0, DOWN = 1, RIGHT = 2, LEFT = 3} Direction; 
 
 typedef struct square {
