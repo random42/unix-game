@@ -188,7 +188,7 @@ void term() {
   send_signal(0, SIGTERM);
   /* aspetta che terminino */
   wait_for_children();
-  printf("\nTimeout!\nPosizione finale:\n");
+  printf("\nTimeout!\n\n");
   print_game_stats(_game);
   /* elimina le risorse ipc */
   msg_close(msg_queue);
