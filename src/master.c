@@ -189,10 +189,7 @@ void term() {
   /* aspetta che terminino */
   wait_for_children();
   printf("\nTimeout!\nPosizione finale:\n");
-  shm_read(mem);
-  print_game_state(_game);
   print_game_stats(_game);
-  shm_stop_read(mem);
   /* elimina le risorse ipc */
   msg_close(msg_queue);
   shm_delete(mem);
