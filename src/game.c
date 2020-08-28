@@ -95,7 +95,8 @@ game* create_game(void* ptr, int n_players, int n_pawns, int max_time, int board
   g->min_hold_nsec = min_hold_nsec;
   g->rounds_played = 0;
   int squares = board_height * board_width;
-  for (int i = 0; i < squares; i++) {
+  int i;
+  for (i = 0; i < squares; i++) {
     square* s = get_square(g, i);
     s->has_flag = FALSE;
     s->flag_points = 0;
@@ -112,7 +113,8 @@ game* create_game(void* ptr, int n_players, int n_pawns, int max_time, int board
     p->id = player_id;
     p->pid = 0;
     p->points = 0;
-    for (int j = 0; j < n_pawns; j++) {
+    int j;
+    for (j = 0; j < n_pawns; j++) {
       pawn* pawn = get_pawn(g, pawn_id);
       pawn->id = pawn_id++;
       pawn->pid = 0;
@@ -141,7 +143,8 @@ int pawn_controls_square(game* g, pawn* p, square* target) {
   // se il pedone non ha abbastanza mosse per arrivare alla casella
   // allora non puo' controllarla a prescindere
   int controls = p->moves_left >= distance;
-  for (int i = 0; i < get_n_squares(g) && controls; i++) {
+  int i;
+  for (i = 0; i < get_n_squares(g) && controls; i++) {
     square* s = get_square(g, i);
     if (s != from && has_pawn(s) && squares_distance(s, target) < distance) {
       controls = FALSE;
@@ -153,7 +156,8 @@ int pawn_controls_square(game* g, pawn* p, square* target) {
 int pawn_controls_any_flag(game* g, pawn* p) {
   square* from = get_pawn_square(g, p);
   int controls = FALSE;
-  for (int i = 0; i < get_n_squares(g) && !controls; i++) {
+  int i;
+  for (i = 0; i < get_n_squares(g) && !controls; i++) {
     square* s = get_square(g, i);
     if (has_flag(s) && pawn_controls_square(g, p, s)) {
       controls = TRUE;
@@ -166,7 +170,8 @@ square* most_extern_controlled_flag(game* g, pawn* p) {
   square* from = get_pawn_square(g, p);
   square* target = NULL;
   double max_distance = -1;
-  for (int i = 0; i < get_n_squares(g); i++) {
+  int i;
+  for (i = 0; i < get_n_squares(g); i++) {
     square* s = get_square(g, i);
     double distance = distance_from_center(g, s);
     if (has_flag(s) && pawn_controls_square(g, p, s) && distance > max_distance) {
@@ -181,7 +186,8 @@ square* most_centered_controlled_flag(game* g, pawn* p) {
   square* from = get_pawn_square(g, p);
   square* target = NULL;
   double min_distance = INT_MAX;
-  for (int i = 0; i < get_n_squares(g); i++) {
+  int i;
+  for (i = 0; i < get_n_squares(g); i++) {
     square* s = get_square(g, i);
     double distance = distance_from_center(g, s);
     if (has_flag(s) && pawn_controls_square(g, p, s) && distance < min_distance) {
@@ -221,7 +227,8 @@ void move_pawn(game* g, pawn* pawn, square* to) {
 }
 
 void remove_captured_flags(game* g) {
-  for (int i = 0; i < get_n_squares(g); i++) {
+  int i;
+  for (i = 0; i < get_n_squares(g); i++) {
     square* s = get_square(g, i);
     if (s->has_flag && s->pawn_id) { // se non e' 0 'pawn_id' vuol dire che c'e' un pedone
       s->has_flag = FALSE;
@@ -257,13 +264,15 @@ void print_game_state(game* g) {
   int w = g->board_width;
   printf("\nSTATO DEL GIOCO\n\n");
   printf("     ");
-  for (int j = 0; j < w; j++) {
+  int j;
+  int i;
+  for (j = 0; j < w; j++) {
     printf("%3d  ", j);
   }
   printf("\n\n");
-  for (int i = 0; i < h; i++) {
+  for (i = 0; i < h; i++) {
     printf("%3d  ", i);
-    for (int j = 0; j < w; j++) {
+    for (j = 0; j < w; j++) {
       square* s = get_square(g, get_square_index(g, j, i));
       print_square(g, s);
     }
@@ -276,12 +285,14 @@ void print_game_stats(game* g) {
   double game_time = elapsed_time(&g->start_time);
   int total_moves = g->max_pawn_moves * g->n_pawns;
   int total_points = 0;
-  for (int i = 0; i < g->n_players; i++) {
+  int i;
+  int j;
+  for (i = 0; i < g->n_players; i++) {
     player* p = get_player(g, i + 1);
     total_points += p->points;
     int moves_left = 0;
     int first_pawn_id = get_player_first_pawn(g, p->id)->id;
-    for (int j = 0; j < g->n_pawns; j++) {
+    for (j = 0; j < g->n_pawns; j++) {
       pawn* pawn = get_pawn(g, first_pawn_id + j);
       moves_left += pawn->moves_left;
     }

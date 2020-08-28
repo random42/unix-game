@@ -46,7 +46,8 @@ void init_game() {
 
 void spawn_players() {
   shm_write(mem);
-  for (int i = 1; i <= _game->n_players; i++) {
+  int i;
+  for (i = 1; i <= _game->n_players; i++) {
     player* p = get_player(_game, i);
     // passo l'id del giocatore come argomento del processo
     // e quindi devo convertirlo in stringa
@@ -70,7 +71,8 @@ void init() {
   sem_set(game_sem, SEM_ROUND_START, 1);
   int n_squares = get_n_squares(_game);
   squares_sem = sem_create(SEM_SQUARES_KEY, n_squares);
-  for (int i = 0; i < n_squares; i++) {
+  int i;
+  for (i = 0; i < n_squares; i++) {
     sem_set(squares_sem, i, 1);
   }
   msg_queue = msg_init(MSG_KEY);

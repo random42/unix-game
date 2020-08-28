@@ -48,7 +48,8 @@ void init() {
 void spawn_pawns() {
   shm_write(mem);
   int pawn_id = get_player_first_pawn(_game, id)->id;
-  for (int i = 0; i < _game->n_pawns; i++) {
+  int i;
+  for (i = 0; i < _game->n_pawns; i++) {
     pawn* p = get_pawn(_game, pawn_id++);
     char id_string[5];
     sprintf(id_string, "%d", p->id);
@@ -82,7 +83,8 @@ square* choose_placement_square() {
 
 void placement_phase() {
   int first_pawn_id = get_player_first_pawn(_game, me->id)->id;
-  for (int round = 0; round < _game->n_pawns; round++) {
+  int round;
+  for (round = 0; round < _game->n_pawns; round++) {
     int value = (round * _game->n_players) + me->id;
     sem_op(game_sem, SEM_PLACEMENT, -value, TRUE);
     debug("PLACEMENT_TURN: %d\n", value);
@@ -105,7 +107,8 @@ void placement_phase() {
 void send_strategies() {
   shm_read(mem);
   int pawn_id = get_player_first_pawn(_game, id)->id;
-  for (int i = 0; i < _game->n_pawns; i++) {
+  int i;
+  for (i = 0; i < _game->n_pawns; i++) {
     pawn* p = get_pawn(_game, pawn_id++);
     message msg;
     msg.mtype = p->pid;
