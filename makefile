@@ -1,4 +1,4 @@
-CC = gcc -std=c89 -pedantic -w
+CC = gcc -std=c89 -pedantic -w -D_POSIX_C_SOURCE=199309L
 INCLUDES = src/*.h
 COMMON_DEPS = $(INCLUDES) makefile
 
