@@ -13,8 +13,8 @@
 #include "game.h"
 #include "master.h"
 
-// non posso utilizzare "game"
-// perche' identifica il tipo
+/* non posso utilizzare "game" */
+/* perche' identifica il tipo */
 game* _game;
 shm* mem;
 int game_sem;
@@ -22,10 +22,10 @@ int squares_sem;
 int msg_queue;
 
 void init_game() {
-  // getenv: prende la stringa di una variabile d'ambiente
-  // atoi: converte una stringa in un intero
+  /* getenv: prende la stringa di una variabile d'ambiente */
+  /* atoi: converte una stringa in un intero */
   char* s = getenv("SO_NUM_G");
-  // per essere sicuri di aver impostato l'ambiente del processo
+  /* per essere sicuri di aver impostato l'ambiente del processo */
   if (s == NULL) {
     printf("Ricordati di impostare le variabili d'ambiente!\n");
     exit(EXIT_FAILURE);
@@ -49,8 +49,8 @@ void spawn_players() {
   int i;
   for (i = 1; i <= _game->n_players; i++) {
     player* p = get_player(_game, i);
-    // passo l'id del giocatore come argomento del processo
-    // e quindi devo convertirlo in stringa
+    /* passo l'id del giocatore come argomento del processo */
+    /* e quindi devo convertirlo in stringa */
     char id_string[5];
     sprintf(id_string, "%d", p->id);
     char* args[] = {id_string, NULL};
@@ -65,7 +65,7 @@ void init() {
   debug_create(SEM_DEBUG_KEY);
   init_game();
   game_sem = sem_create(SEM_GAME_KEY, SEM_GAME_N);
-  // imposto i semafori ai valori iniziali
+  /* imposto i semafori ai valori iniziali */
   sem_set(game_sem, SEM_PLACEMENT, 0);
   sem_set(game_sem, SEM_ROUND_READY, _game->n_players);
   sem_set(game_sem, SEM_ROUND_START, 1);
@@ -76,11 +76,11 @@ void init() {
     sem_set(squares_sem, i, 1);
   }
   msg_queue = msg_init(MSG_KEY);
-  // imposto l'id di questo processo come id del gruppo di processi
-  // in modo da mandare facilmente segnali a tutti i processi figli
+  /* imposto l'id di questo processo come id del gruppo di processi */
+  /* in modo da mandare facilmente segnali a tutti i processi figli */
   set_process_group_id(0, 0);
-  // ignora il segnale di fine round
-  // in quanto viene mandato da questo processo
+  /* ignora il segnale di fine round */
+  /* in quanto viene mandato da questo processo */
   set_signal_handler(ROUND_END_SIGNAL, SIG_IGN, TRUE);
   set_signal_handler(SIGABRT, term, TRUE);
   set_signal_handler(SIGINT, term, TRUE);
@@ -91,12 +91,12 @@ void start() {
   debug("MASTER\n");
   spawn_players();
   placement_phase();
-  // set game start time
+  /* set game start time */
   gettimeofday(&_game->start_time, NULL);
   while (TRUE) {
     play_round();
   }
-  // debug("NORMAL_TERM\n");
+  /* debug("NORMAL_TERM\n"); */
 }
 
 void placement_phase() {
@@ -109,15 +109,15 @@ void placement_phase() {
 
 void end_round() {
   debug("ROUND_END\n");
-  // annullo il timeout di fine gioco
+  /* annullo il timeout di fine gioco */
   clear_timeout();
-  // reimposta i semafori ai valori iniziali
+  /* reimposta i semafori ai valori iniziali */
   sem_op(game_sem, SEM_ROUND_START, 1, TRUE);
   sem_set(game_sem, SEM_ROUND_READY, _game->n_players);
-  // manda il segnale di fine round a tutto il gruppo di processi
+  /* manda il segnale di fine round a tutto il gruppo di processi */
   send_signal(0, ROUND_END_SIGNAL);
   debug("ROUND_END_SENT\n");
-  // sleep(1);
+  /* sleep(1); */
 }
 
 void play_round() {
@@ -129,22 +129,22 @@ void play_round() {
   shm_read(mem);
   print_game_state(_game);
   shm_stop_read(mem);
-  // fa iniziare il round
+  /* fa iniziare il round */
   debug("ROUND_START\n");
-  // fa mandare le strategie dai giocatori
+  /* fa mandare le strategie dai giocatori */
   sem_op(game_sem, SEM_ROUND_START, -1, TRUE);
-  // reimposta il semaforo
+  /* reimposta il semaforo */
   debug("ROUND_STARTED\n");
-  // attende che i giocatori inviino le strategie
+  /* attende che i giocatori inviino le strategie */
   sem_op(game_sem, SEM_ROUND_READY, 0, TRUE);
   debug("PLAYING!\n");
   printf("I giocatori hanno inviato le strategie, i pedoni cominciano a muoversi..\n");
-  // imposto il timeout di fine gioco
+  /* imposto il timeout di fine gioco */
   set_timeout(term, _game->max_time, 0, TRUE);
-  // sleep(3);
-  // attende i messaggi di cattura delle bandiere
+  /* sleep(3); */
+  /* attende i messaggi di cattura delle bandiere */
   wait_flag_captures(flags);
-  // termina il round
+  /* termina il round */
   end_round();
 }
 
@@ -163,12 +163,12 @@ int place_flags() {
   int score = 0;
   int flags = 0;
   while (score < target_score) {
-    // punteggio della bandiera casuale
+    /* punteggio della bandiera casuale */
     int flag_points = random_int_range(_game->flag_min, _game->flag_max);
-    // se arrivo al limite del round score arrotondo il punteggio
+    /* se arrivo al limite del round score arrotondo il punteggio */
     flag_points = min(target_score - score, flag_points);
     square* s = NULL;
-    // scelgo una casella libera da pedine e bandiere
+    /* scelgo una casella libera da pedine e bandiere */
     while (s == NULL || has_pawn(s) || has_flag(s)) {
       int index = random_int_range(0, get_n_squares(_game) - 1);
       s = get_square(_game, index);
@@ -183,17 +183,17 @@ int place_flags() {
 
 void term() {
   debug("MASTER_EXIT\n");
-    // manda il segnale di terminare agli altri processi
-  // 0 per mandare al gruppo di processi
+    /* manda il segnale di terminare agli altri processi */
+  /* 0 per mandare al gruppo di processi */
   send_signal(0, SIGTERM);
-  // aspetta che terminino
+  /* aspetta che terminino */
   wait_for_children();
   printf("\nTimeout!\nPosizione finale:\n");
   shm_read(mem);
   print_game_state(_game);
   print_game_stats(_game);
   shm_stop_read(mem);
-  // elimina le risorse ipc
+  /* elimina le risorse ipc */
   msg_close(msg_queue);
   shm_delete(mem);
   sem_delete(game_sem);

@@ -6,13 +6,13 @@
 #include "sem.h"
 #include "debug.h"
 
-// https://en.wikipedia.org/wiki/Readers%E2%80%93writers_problem#Third_readers%E2%80%93writers_problem
+/* https://en.wikipedia.org/wiki/Readers%E2%80%93writers_problem#Third_readers%E2%80%93writers_problem */
 
 static int LOCK_SEMS = 4;
-static int WRITE_LOCK = 0; // lock di scrittura
-static int READERS_LOCK = 1; // lock per modificare il numero di readers
-static int READERS = 2; // semaforo che conta il numero di lettori
-static int QUEUE = 3; // lock che preserva l'ordine delle richieste di scrittura/lettura
+static int WRITE_LOCK = 0; /* lock di scrittura */
+static int READERS_LOCK = 1; /* lock per modificare il numero di readers */
+static int READERS = 2; /* semaforo che conta il numero di lettori */
+static int QUEUE = 3; /* lock che preserva l'ordine delle richieste di scrittura/lettura */
 static int _sem_id;
 
 shm* shm_create(int key, int size) {
@@ -25,9 +25,9 @@ shm* shm_create(int key, int size) {
   if (ptr == (void*)-1) {
     error("shmat\n");
   }
-  // utilizzo la chiave della memoria condivisa + 1 come chiave per i semafori
+  /* utilizzo la chiave della memoria condivisa + 1 come chiave per i semafori */
   int sem_id = sem_create(key + 1, LOCK_SEMS);
-  // imposta i semafori ai valori iniziali
+  /* imposta i semafori ai valori iniziali */
   sem_set(sem_id, READERS_LOCK, 1);
   sem_set(sem_id, WRITE_LOCK, 1);
   sem_set(sem_id, READERS, 0);
@@ -58,17 +58,17 @@ shm* shm_get(int key) {
 }
 
 void shm_read(shm* shm) {
-  // debug("SHM_QUEUE_READ\n");
+  /* debug("SHM_QUEUE_READ\n"); */
   sem_op(shm->sem_id, QUEUE, -1, TRUE);
   sem_op(shm->sem_id, READERS_LOCK, -1, TRUE);
   sem_op(shm->sem_id, READERS, 1, TRUE);
   int readers = sem_get_value(shm->sem_id, READERS);
-  // debug("SHM_READERS = %d\n", readers);
+  /* debug("SHM_READERS = %d\n", readers); */
   if (readers == 1) {
     sem_op(shm->sem_id, WRITE_LOCK, -1, TRUE);
   }
   sem_op(shm->sem_id, READERS_LOCK, 1, TRUE);
-  // debug("SHM_READ\n");
+  /* debug("SHM_READ\n"); */
   sem_op(shm->sem_id, QUEUE, 1, TRUE);
 }
 
@@ -76,24 +76,24 @@ void shm_stop_read(shm* shm) {
   sem_op(shm->sem_id, READERS_LOCK, -1, TRUE);
   sem_op(shm->sem_id, READERS, -1, TRUE);
   int readers = sem_get_value(shm->sem_id, READERS);
-  // debug("SHM_READERS = %d\n", readers);
+  /* debug("SHM_READERS = %d\n", readers); */
   if (readers == 0) {
     sem_op(shm->sem_id, WRITE_LOCK, 1, TRUE);
   }
-  // debug("SHM_STOP_READ\n");
+  /* debug("SHM_STOP_READ\n"); */
   sem_op(shm->sem_id, READERS_LOCK, 1, TRUE);
 }
 
 void shm_write(shm* shm) {
-  // debug("SHM_QUEUE_WRITE\n");
+  /* debug("SHM_QUEUE_WRITE\n"); */
   sem_op(shm->sem_id, QUEUE, -1, TRUE);
   sem_op(shm->sem_id, WRITE_LOCK, -1, TRUE);
-  // debug("SHM_WRITE\n");
+  /* debug("SHM_WRITE\n"); */
   sem_op(shm->sem_id, QUEUE, 1, TRUE);
 }
 
 void shm_stop_write(shm* shm) {
-  // debug("SHM_STOP_WRITE\n");
+  /* debug("SHM_STOP_WRITE\n"); */
   sem_op(shm->sem_id, WRITE_LOCK, 1, TRUE);
 }
 

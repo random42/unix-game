@@ -31,7 +31,7 @@ square* get_first_square(game* g) {
 }
 
 pawn* get_pawn(game* g, int id) {
-  // gli id partono da 1 mentre gli indici da 0
+  /* gli id partono da 1 mentre gli indici da 0 */
   return &get_first_pawn(g)[id - 1];
 }
 
@@ -39,10 +39,10 @@ player* get_player(game* g, int id) {
   return &get_first_player(g)[id - 1];
 }
 
-// x e y partono da 0
+/* x e y partono da 0 */
 int get_square_index(game* g, int x, int y) {
-  // l'indice della casella è il numero della riga 
-  // per il numero di righe più il numero della colonna
+  /* l'indice della casella è il numero della riga  */
+  /* per il numero di righe più il numero della colonna */
   return (y * g->board_width) + x;
 }
 
@@ -101,9 +101,9 @@ game* create_game(void* ptr, int n_players, int n_pawns, int max_time, int board
     s->has_flag = FALSE;
     s->flag_points = 0;
     s->pawn_id = 0;
-    // la coordinata x è il resto della divisione
+    /* la coordinata x è il resto della divisione */
     s->x = i % board_width;
-    // la coordinata y è il risultato della divisione
+    /* la coordinata y è il risultato della divisione */
     s->y = i / board_width;
   }
   int player_id = 1;
@@ -140,8 +140,8 @@ double distance_from_center(game* g, square* s) {
 int pawn_controls_square(game* g, pawn* p, square* target) {
   square* from = get_pawn_square(g, p);
   int distance = squares_distance(from, target);
-  // se il pedone non ha abbastanza mosse per arrivare alla casella
-  // allora non puo' controllarla a prescindere
+  /* se il pedone non ha abbastanza mosse per arrivare alla casella */
+  /* allora non puo' controllarla a prescindere */
   int controls = p->moves_left >= distance;
   int i;
   for (i = 0; i < get_n_squares(g) && controls; i++) {
@@ -230,7 +230,7 @@ void remove_captured_flags(game* g) {
   int i;
   for (i = 0; i < get_n_squares(g); i++) {
     square* s = get_square(g, i);
-    if (s->has_flag && s->pawn_id) { // se non e' 0 'pawn_id' vuol dire che c'e' un pedone
+    if (s->has_flag && s->pawn_id) { /* se non e' 0 'pawn_id' vuol dire che c'e' un pedone */
       s->has_flag = FALSE;
       pawn* p = get_pawn(g, s->pawn_id);
       player* pl = get_player(g, p->player_id);
@@ -241,16 +241,16 @@ void remove_captured_flags(game* g) {
 }
 
 void print_square(game* g, square* s) {
-  // non ci puo' essere una pedina su una casella con bandiera
-  // nei momenti in cui si printa lo stato
-  // quindi si printa o F {punti della bandiera}
-  // o P {id del player}
+  /* non ci puo' essere una pedina su una casella con bandiera */
+  /* nei momenti in cui si printa lo stato */
+  /* quindi si printa o F {punti della bandiera} */
+  /* o P {id del player} */
   if (has_flag(s)) {
     printf(ANSI_COLOR_RED" %2d  "ANSI_COLOR_RESET, s->flag_points);
   }
   else if (has_pawn(s)) {
     player* p = get_player(g, get_pawn(g, s->pawn_id)->player_id);
-    // stampo l'id del player che controlla la pedina
+    /* stampo l'id del player che controlla la pedina */
     printf(ANSI_COLOR_GREEN" %2d  "ANSI_COLOR_RESET, p->id);
   }
   else {
@@ -259,7 +259,7 @@ void print_square(game* g, square* s) {
 }
 
 void print_game_state(game* g) {
-  // si usa l'intero in mezzo a %d per stampare alla stessa altezza
+  /* si usa l'intero in mezzo a %d per stampare alla stessa altezza */
   int h = g->board_height;
   int w = g->board_width;
   printf("\nSTATO DEL GIOCO\n\n");

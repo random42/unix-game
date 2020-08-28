@@ -24,9 +24,9 @@ void sig_handler(int sig) {
 
 void init() {
   pid = get_process_id();
-  // inizializza la libreria random
+  /* inizializza la libreria random */
   random_init();
-  // inizializza le strutture ipc
+  /* inizializza le strutture ipc */
   debug_get(SEM_DEBUG_KEY);
   game_sem = sem_get(SEM_GAME_KEY);
   squares_sem = sem_get(SEM_SQUARES_KEY);
@@ -34,14 +34,14 @@ void init() {
   mem = shm_get(SHM_KEY);
   _game = mem->ptr;
   shm_read(mem);
-  // cerca il player a cui corrisponde
+  /* cerca il player a cui corrisponde */
   me = get_player(_game, id);
   shm_stop_read(mem);
-  // imposta l'handler per terminare
+  /* imposta l'handler per terminare */
   set_signal_handler(SIGTERM, term, TRUE);
   set_signal_handler(SIGINT, term, TRUE);
   set_signal_handler(SIGABRT, term, TRUE);
-  // se non imposto un handler non posso usare la wait_signal
+  /* se non imposto un handler non posso usare la wait_signal */
   set_signal_handler(ROUND_END_SIGNAL, sig_handler, FALSE);
 }
 
@@ -63,7 +63,7 @@ void spawn_pawns() {
 
 void start() {
   debug("PLAYER_START\n");
-  // debug("player_ppid: %d\n", get_process_group_id());
+  /* debug("player_ppid: %d\n", get_process_group_id()); */
   spawn_pawns();
   placement_phase();
   while (TRUE) {
@@ -73,7 +73,7 @@ void start() {
 
 square* choose_placement_square() {
   square* s = NULL;
-  // prendo la prima casella che non ha una pedina
+  /* prendo la prima casella che non ha una pedina */
   while (s == NULL || s->pawn_id) {
     int index = random_int_range(0, get_n_squares(_game) - 1);
     s = get_square(_game, index);
@@ -89,15 +89,15 @@ void placement_phase() {
     sem_op(game_sem, SEM_PLACEMENT, -value, TRUE);
     debug("PLACEMENT_TURN: %d\n", value);
     shm_read(mem);
-    // debug("Player %d is placing\n", me->id);
+    /* debug("Player %d is placing\n", me->id); */
     pawn* p = get_pawn(_game, first_pawn_id + round);
-    // debug("Pawn %d\n", p->id);
+    /* debug("Pawn %d\n", p->id); */
     square* s = choose_placement_square();
     shm_stop_read(mem);
     shm_write(mem);
-    // piazza il pedina
+    /* piazza il pedina */
     place_pawn(p, s);
-    // acquisisce il lock della casella per indicare che è occupata
+    /* acquisisce il lock della casella per indicare che è occupata */
     sem_op(squares_sem, get_square_index(_game, s->x, s->y), -1, TRUE);
     shm_stop_write(mem);
     sem_op(game_sem, SEM_PLACEMENT, value + 1, TRUE);
@@ -112,7 +112,7 @@ void send_strategies() {
     pawn* p = get_pawn(_game, pawn_id++);
     message msg;
     msg.mtype = p->pid;
-    // scelgo una delle due strategie in modo casuale uniforme
+    /* scelgo una delle due strategie in modo casuale uniforme */
     msg.strategy = random_int_range(0, 1);
     msg_send(msg_queue, &msg, TRUE);
   }
@@ -120,17 +120,17 @@ void send_strategies() {
 }
 
 void play_round() {
-  // attende l'inizio del round
+  /* attende l'inizio del round */
   sem_op(game_sem, SEM_ROUND_START, 0, TRUE);
   debug("PLAYER_START_ROUND\n");
-  // sleep(1);
-  // invia le strategie ai pedoni
+  /* sleep(1); */
+  /* invia le strategie ai pedoni */
   send_strategies();
   debug("PLAYER_READY\n");
-  // decrementa il semaforo per segnalare che è pronto
+  /* decrementa il semaforo per segnalare che è pronto */
   sem_op(game_sem, SEM_ROUND_READY, -1, TRUE);
   debug("PLAYER_WAIT\n");
-  // attende il segnale di fine round o di terminazione
+  /* attende il segnale di fine round o di terminazione */
   infinite_sleep();
 }
 

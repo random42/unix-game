@@ -6,14 +6,14 @@
 #include "process.h"
 
 void infinite_sleep() {
-  // se sleep ritorna 0 significa che ha dormito per il tempo
-  // definito, altrimenti è stato interrotto da un segnale
-  // e ritorna i secondi mancanti
+  /* se sleep ritorna 0 significa che ha dormito per il tempo */
+  /* definito, altrimenti è stato interrotto da un segnale */
+  /* e ritorna i secondi mancanti */
   while (sleep(INT_MAX) == 0) continue;
 }
 
 int nano_sleep(long ns) {
-  // un secondo sono 1 miliardo di nanosecondi
+  /* un secondo sono 1 miliardo di nanosecondi */
   long one_sec = 1e9;
   struct timespec t;
   t.tv_sec = ns / one_sec;
@@ -48,25 +48,25 @@ void wait_for_children() {
 int fork_and_exec(char* path, char** argv) {
   int child = fork();
   switch(child) {
-    case -1: { // error
+    case -1: { /* error */
       error("fork\n");
       break;
     }
-    case 0: { // child process
+    case 0: { /* child process */
       int r = execv(path, argv);
       if (r == -1) {
         error("execv\n");
       }
       break;
     }
-    default: { // parent process
+    default: { /* parent process */
       return child;
     }
   }
 }
 
-// set function to handle signals
-// if atomic is TRUE then the handler cannot be interrupted by other signals
+/* set function to handle signals */
+/* if atomic is TRUE then the handler cannot be interrupted by other signals */
 void set_signal_handler(int signal, void (*f)(int), int atomic) {
   struct sigaction s;
   s.sa_handler = f;
@@ -89,9 +89,9 @@ void send_signal(int pid, int sig) {
 
 void wait_signal(int sig) {
   sigset_t set;
-  // azzera il set di segnali
+  /* azzera il set di segnali */
   sigemptyset(&set);
-  // aggiunge il segnale al set di segnali
+  /* aggiunge il segnale al set di segnali */
   sigaddset(&set, sig);
   int r = sigwait(&set, NULL);
   if (r == -1) {

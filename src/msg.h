@@ -2,9 +2,9 @@
 #define MSG_H
 
 typedef struct message {
-  long mtype; // pid del processo ricevente
-  // vale 0 se la strategia è concentrarsi sulle bandiere più centrali
-  // o 1 per le bandiere più esterne
+  long mtype; /* pid del processo ricevente */
+  /* vale 0 se la strategia è concentrarsi sulle bandiere più centrali */
+  /* o 1 per le bandiere più esterne */
   int strategy;
 } message;
 
